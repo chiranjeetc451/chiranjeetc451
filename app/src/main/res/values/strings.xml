@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">MindYug</string>
+    <string name="collect_points">Collect Points</string>
+    <string name="claim_rewards">Claim Rewards</string>
+    <string name="increase_productivity">"Increase Productivity"</string>
+    <string name="sign_in">"        Sign In        "</string>
+    <string name="agreement_half">"By tapping the button above, you agree with our "</string>
+    <string name="terms">Terms</string>
+    <string name="and">" and "</string>
+    <string name="privacy_policy">Privacy Policy</string>
+
+    <string name="problem_login">Trouble Logging in?</string>
+    <string name="learn_otp">When you tap Get OTP, MindYug will send a text with verification code. The verified phone number can be used to login.</string>
+    <string name="learn_otp_two">" Learn what happens when you login from a new phone"</string>
+    <string name="my_number_is">My Number is</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="rewards">Rewards</string>
+    <string name="dashboard">Dashboard</string>
+
+
+
+</resources>

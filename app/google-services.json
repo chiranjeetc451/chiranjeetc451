@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1027761091560",
+    "project_id": "mindyug-6225b",
+    "storage_bucket": "mindyug-6225b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1027761091560:android:d47318584fd53fdc69aa5d",
+        "android_client_info": {
+          "package_name": "com.mindyug.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1027761091560-33uusf0pcltcnqmk98j9a2dea0ip8oq3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5RcoPQpxY7qR_81XV2PHWxyrQx4wwpyg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1027761091560-33uusf0pcltcnqmk98j9a2dea0ip8oq3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
