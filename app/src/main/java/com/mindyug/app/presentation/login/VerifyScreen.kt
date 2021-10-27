@@ -2,6 +2,7 @@ package com.mindyug.app.presentation.login
 
 import android.app.Activity
 import android.content.*
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,11 +37,13 @@ import com.mindyug.app.ui.theme.Typography
 
 @Composable
 fun VerifyScreen(
-    navHostController: NavHostController,
     viewModel: LoginViewModel = hiltViewModel(),
+    navHostController: NavHostController,
     number: String,
     onClick: (otp: String) -> Unit,
-) {
+    onResendClick: (mobileNum: String) -> Unit,
+
+    ) {
     val otp = viewModel.otp.value
     val context = LocalContext.current
 
@@ -107,6 +110,8 @@ fun VerifyScreen(
                         end = offset
                     ).firstOrNull()?.let {
 //                        Log.d("tag", "clicked")
+                        Log.d("tag","clicked")
+                        onResendClick(number)
                     }
                 })
 

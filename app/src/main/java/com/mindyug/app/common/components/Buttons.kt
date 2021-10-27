@@ -31,6 +31,13 @@ val horizontalGradientBrush = Brush.horizontalGradient(
     )
 )
 
+val horizontalDisabledGradientBrush = Brush.horizontalGradient(
+    colors = listOf(
+        Color(0xFFB0BBD8),
+        Color(0xFFB4DBC6),
+    )
+)
+
 @Composable
 fun GradientButton(
     onClick: () -> Unit,
@@ -49,7 +56,9 @@ fun GradientButton(
         modifier = modifier
             .clip(shape)
             .background(
-                horizontalGradientBrush
+
+                if (enabled) horizontalGradientBrush else horizontalDisabledGradientBrush
+
             )
             .clickable(
                 onClick = onClick,
@@ -62,6 +71,7 @@ fun GradientButton(
         ProvideTextStyle(
             value = MaterialTheme.typography.button
         ) {
+
             Row(
                 Modifier
                     .defaultMinSize(
@@ -72,12 +82,26 @@ fun GradientButton(
                     .padding(contentPadding),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
-                content = content
+                content = if (enabled) {
+                    content
+                } else {
+                    {
+                        Spacer(modifier = Modifier.width(32.dp))
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 3.dp,
+                        )
+                        Spacer(modifier = Modifier.width(32.dp))
+
+
+                    }
+                }
             )
 
         }
     }
 }
+
 
 private val ButtonShape = RoundedCornerShape(percent = 50)
 

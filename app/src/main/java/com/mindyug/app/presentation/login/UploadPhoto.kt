@@ -1,8 +1,6 @@
 package com.mindyug.app.presentation.login
 
-import android.content.Context
 import android.graphics.Bitmap
-import android.net.ConnectivityManager
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -32,20 +30,16 @@ import com.mindyug.app.R
 import com.mindyug.app.common.components.GradientButton
 import com.mindyug.app.ui.theme.MindYugTheme
 import com.mindyug.app.ui.theme.Typography
-import android.net.NetworkInfo
-
-
-
 
 
 @ExperimentalCoilApi
 @Composable
 fun UploadPhotoScreen(
+    viewModel: LoginViewModel = hiltViewModel(),
     navHostController: NavHostController,
     number: String,
     name: String,
     username: String,
-    viewModel: LoginViewModel = hiltViewModel(),
 ) {
 
     var value by remember { mutableStateOf("") }
@@ -56,6 +50,8 @@ fun UploadPhotoScreen(
 
     val context = LocalContext.current
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    val btnNext = viewModel.btnNext.value
 
 
     val launcher = rememberLauncherForActivityResult(
@@ -133,29 +129,24 @@ fun UploadPhotoScreen(
                         tint = MaterialTheme.colors.secondary
                     )
                 }
-            Log.d("tag", FirebaseAuth.getInstance().currentUser?.uid!!)
+                Log.d("tag", FirebaseAuth.getInstance().currentUser?.uid!!)
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                GradientButton(onClick = {
+                GradientButton(
+                    onClick = {
 //                    navHostController.navigate(Screen.HomeScreen.route)
-                    imageUri?.let { it1 -> viewModel.uploadProfilePic(it1) }
-                    viewModel.addUser(name,username, number)
-
-//
-//                    if(viewModel.getUsernameFromUid(FirebaseAuth.getInstance().currentUser?.uid!!)!!
-//                        .isNotEmpty()
-//                    ){
-//                        Toast.makeText(
-//                            context,
-//                            "Verificarton successful",
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                    }
-
- 
-
-                }) {
+                        imageUri?.let { it1 -> viewModel.uploadProfilePic(it1) }
+                        viewModel.addUser(
+                            name = name,
+                            username = username,
+                            number = number,
+                            context = context,
+                            navController = navHostController
+                        )
+                    },
+                    enabled = btnNext.isEnabled
+                ) {
                     Text(text = "Get started")
                 }
             }

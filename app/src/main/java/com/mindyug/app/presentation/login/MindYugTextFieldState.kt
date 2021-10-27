@@ -1,7 +1,9 @@
 package com.mindyug.app.presentation.login
 
 data class MindYugTextFieldState(
-    var text: String = "",
+    val text: String = "",
     val hint: String = "",
-    val isError: Boolean = false
+    val isError: Boolean = false,
+
+
 )

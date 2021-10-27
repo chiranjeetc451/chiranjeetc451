@@ -37,10 +37,10 @@ import com.mindyug.app.ui.theme.Typography
 
 @Composable
 fun EnterUsernameScreen(
+    viewModel: LoginViewModel = hiltViewModel(),
     navHostController: NavHostController,
     number: String,
     name: String,
-    viewModel: LoginViewModel = hiltViewModel(),
 
 
     ) {

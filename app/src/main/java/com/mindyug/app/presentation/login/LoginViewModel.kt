@@ -1,24 +1,30 @@
 package com.mindyug.app.presentation.login
 
+import android.content.Context
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.Address
 import com.mindyug.app.domain.model.UserData
 import com.mindyug.app.domain.repository.UserDataRepository
+import com.mindyug.app.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.util.regex.Pattern
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject
 constructor(
-    private val userDataRepository: UserDataRepository,
-    savedStateHandle: SavedStateHandle
+    private val userDataRepository: UserDataRepository
 ) : ViewModel() {
     private val _state = mutableStateOf(UserDataState())
     val state: State<UserDataState> = _state
@@ -46,6 +52,13 @@ constructor(
         )
     )
     val username: State<MindYugTextFieldState> = _username
+
+    private val _btnNext = mutableStateOf(MindYugButtonState())
+    val btnNext: State<MindYugButtonState> = _btnNext
+
+    private val _btnVerify = mutableStateOf(MindYugButtonState())
+    val btnVerify: State<MindYugButtonState> = _btnVerify
+
 
     fun onEvent(event: UserDataEvent) {
         when (event) {
@@ -118,18 +131,87 @@ constructor(
         userDataRepository.uploadProfilePic(uri)
     }
 
-    fun addUser(name: String, username: String, number: String) {
+    fun addUser(
+        name: String,
+        username: String,
+        number: String,
+        context: Context,
+        navController: NavHostController
+    ) {
         val user = UserData(name, username, number, Address("", "", "", "", "", "", "", ""))
-        userDataRepository.setUserData(user)
+        userDataRepository.setUserData(user).onEach { result ->
+            when (result) {
+                is Results.Loading -> {
+                    _btnNext.value = btnNext.value.copy(
+                        isEnabled = false
+                    )
+                }
+                is Results.Success -> {
+                    navController.navigate(Screen.HomeScreen.route)
+                    Toast.makeText(
+                        context,
+                        "Verification Successful",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                is Results.Error -> {
+                    _btnNext.value = btnNext.value.copy(
+                        error = "Unknown error occurred. Please check your internet connection.",
+                        isEnabled = true
+                    )
+                }
+
+            }
+
+        }.launchIn(viewModelScope)
+    }
+
+    fun getUsername(context: Context, navController: NavHostController, phone: String) {
+        userDataRepository.getUsernameFromUid().onEach { result ->
+            when (result) {
+                is Results.Loading -> {
+                    Toast.makeText(
+                        context,
+                        "wait",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                }
+                is Results.Success -> {
+//                    return@onEach result.data?.username != null
+                    if (result.data?.username != null) {
+                        navController.navigate(Screen.HomeScreen.route)
+                    } else {
+                        navController.navigate(Screen.EnterNameScreen.withArgs(phone))
+                    }
+
+                    result.data?.let { Log.d("tag", it.username) }
+                    Toast.makeText(
+                        context,
+                        "Verification ooop ${result.data?.username}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                }
+                is Results.Error -> {
+                    Toast.makeText(
+                        context,
+                        "error",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            }
+
+        }.launchIn(viewModelScope)
     }
 
 
-//    fun getUsernameFromUid(Uid: String): String? {
-//        return userDataRepository.getUsernameFromUid(Uid)
-//
-//
-//    }
-
-
 }
+
+
+
+
+
+
 

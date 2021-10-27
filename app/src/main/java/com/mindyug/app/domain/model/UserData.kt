@@ -5,4 +5,7 @@ data class UserData(
     val username: String,
     val number: String,
     val address: Address?
-)
+){
+    constructor() : this("", "", "", null)
+
+}

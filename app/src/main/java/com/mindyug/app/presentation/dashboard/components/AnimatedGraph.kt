@@ -1,4 +1,4 @@
-package com.mindyug.app.presentation.home.components
+package com.mindyug.app.presentation.dashboard.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas

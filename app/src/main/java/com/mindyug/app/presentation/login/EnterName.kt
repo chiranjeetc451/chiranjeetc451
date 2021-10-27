@@ -27,9 +27,9 @@ import com.mindyug.app.ui.theme.Typography
 
 @Composable
 fun EnterNameScreen(
+    viewModel: LoginViewModel = hiltViewModel(),
     navHostController: NavHostController,
     verifiedNumber: String,
-    viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val name = viewModel.name.value
     val context = LocalContext.current

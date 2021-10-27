@@ -17,28 +17,32 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.mindyug.app.R
 import com.mindyug.app.common.components.GradientButton
+import com.mindyug.app.presentation.util.Screen
 import com.mindyug.app.ui.theme.MindYugTheme
 import com.mindyug.app.ui.theme.Typography
 
 
 @Composable
 fun IntroductionScreen(
-    onNextClick: () -> Unit = {},
+    navController: NavHostController
 ) {
     MindYugTheme {
-        PagerContent(onNextClick)
+        PagerContent(navController = navController)
     }
 }
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun PagerContent(onNextClick: () -> Unit = {}) {
+fun PagerContent(
+    navController: NavHostController
+) {
     Scaffold {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -85,8 +89,13 @@ fun PagerContent(onNextClick: () -> Unit = {}) {
                     .align(Alignment.CenterHorizontally)
                     .padding(16.dp)
             )
-            GradientButton(onClick = onNextClick, modifier = Modifier.padding(8.dp)) {
+            GradientButton(onClick = {
+                navController.navigate(Screen.EnterNumberScreen.route)
+            }, modifier = Modifier.padding(8.dp)) {
+                Spacer(modifier = Modifier.width(32.dp))
                 Text(text = stringResource(id = R.string.sign_in))
+                Spacer(modifier = Modifier.width(32.dp))
+
             }
             Spacer(modifier = Modifier.height(16.dp))
             ClickableText(text = annotatedText, Modifier
@@ -144,14 +153,8 @@ fun PagerItem(
 
 }
 /* TODO: 4. Deal with Orientation Changes. */
-// TODO: 5. Save the state in ViewModel
 
 
-@OptIn(ExperimentalPagerApi::class)
-@Preview
-@Composable
-fun IntroductionScreenPreview() {
-    IntroductionScreen()
-}
+
 
 

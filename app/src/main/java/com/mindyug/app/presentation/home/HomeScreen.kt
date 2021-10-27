@@ -9,10 +9,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.mindyug.app.R
 import com.mindyug.app.presentation.home.components.MindYugBottomNavigation
 import com.mindyug.app.presentation.home.components.MindYugBottomNavigationItem
@@ -20,18 +18,7 @@ import com.mindyug.app.presentation.home.components.PointKeeper
 import com.mindyug.app.ui.theme.MindYugTheme
 
 
-@Composable
-fun HomeScreen() {
-    val navController = rememberNavController()
 
-    MindYugTheme {
-        Scaffold(
-            bottomBar = { MindYugBottomNavigationBar(navController = navController) }
-        ) {
-//            MindYugAppContent(navController = navController)
-        }
-    }
-}
 
 @Composable
 fun MindYugBottomNavigationBar(navController: NavController) {
@@ -116,8 +103,3 @@ fun MindYugBottomNavigationBar(navController: NavController) {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun BottomNavigationBarPreview() {
-//    MindYugBottomNavigationBar(navController = rememberNavController(navigators = ))
-}

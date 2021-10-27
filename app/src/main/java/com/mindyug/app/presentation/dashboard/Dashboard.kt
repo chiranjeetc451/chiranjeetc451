@@ -1,4 +1,4 @@
-package com.mindyug.app.presentation.home
+package com.mindyug.app.presentation.dashboard
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.mindyug.app.presentation.home.components.AnimatedCircle
+import com.mindyug.app.presentation.dashboard.components.AnimatedCircle
 
 @Composable
 fun Dashboard() {

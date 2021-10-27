@@ -1,4 +1,4 @@
-package com.mindyug.app.presentation.home
+package com.mindyug.app.presentation.rewards
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

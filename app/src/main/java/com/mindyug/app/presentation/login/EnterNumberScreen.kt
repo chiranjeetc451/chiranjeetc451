@@ -48,8 +48,8 @@ import java.util.regex.Pattern
 
 @Composable
 fun EnterNumberScreen(
-    navHostController: NavHostController,
     viewModel: LoginViewModel = hiltViewModel(),
+    navHostController: NavHostController,
     onClick: (mobileNum: String) -> Unit,
 
     ) {
@@ -114,7 +114,6 @@ fun EnterNumberScreen(
                                 Modifier.alpha(0.5f)
                             )
                         },
-
                         leadingIcon = {
                             Image(
                                 painter = painterResource(id = R.drawable.ic_india),
