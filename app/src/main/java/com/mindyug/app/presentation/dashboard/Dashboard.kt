@@ -1,5 +1,7 @@
 package com.mindyug.app.presentation.dashboard
 
+import android.content.Context.MODE_PRIVATE
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -10,11 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mindyug.app.presentation.dashboard.components.AnimatedCircle
 
 @Composable
 fun Dashboard() {
+
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -33,6 +38,12 @@ fun Dashboard() {
         Spacer(modifier = Modifier.height(25.dp))
 
 
+//
+//        Toast.makeText(
+//            context,
+//            "Verification ooop ${highScore.toString()}",
+//            Toast.LENGTH_SHORT
+//        ).show()
 
     }
 }

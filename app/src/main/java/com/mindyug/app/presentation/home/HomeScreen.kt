@@ -42,6 +42,7 @@ fun MindYugBottomNavigationBar(navController: NavController) {
                 alwaysShowLabel = false,
                 selected = currentRoute == "home/dashboard",
                 onClick = {
+//                    navController.popBackStack()
                     navController.navigate("home/dashboard") {
                         // Pop up to the start destination of the graph to
                         // avoid building up a large stack of destinations

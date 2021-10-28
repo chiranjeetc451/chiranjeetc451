@@ -1,6 +1,8 @@
 package com.mindyug.app.presentation.login
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -148,6 +150,11 @@ constructor(
                 }
                 is Results.Success -> {
                     navController.navigate(Screen.HomeScreen.route)
+                    val prefs= context.getSharedPreferences("userLoginState", MODE_PRIVATE) ?: return@onEach
+                    with (prefs.edit()) {
+                        putBoolean("isUserLoggedIn", true)
+                        apply()
+                    }
                     Toast.makeText(
                         context,
                         "Verification Successful",
@@ -181,6 +188,13 @@ constructor(
 //                    return@onEach result.data?.username != null
                     if (result.data?.username != null) {
                         navController.navigate(Screen.HomeScreen.route)
+
+                        val prefs= context.getSharedPreferences("userLoginState", MODE_PRIVATE) ?: return@onEach
+                        with (prefs.edit()) {
+                            putBoolean("isUserLoggedIn", true)
+                            apply()
+                        }
+
                     } else {
                         navController.navigate(Screen.EnterNameScreen.withArgs(phone))
                     }

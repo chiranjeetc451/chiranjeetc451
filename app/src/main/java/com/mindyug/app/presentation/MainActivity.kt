@@ -1,5 +1,6 @@
 package com.mindyug.app.presentation
 
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -11,7 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.annotation.ExperimentalCoilApi
 
@@ -33,8 +33,6 @@ import java.util.concurrent.TimeUnit
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: LoginViewModel by viewModels()
-
-
     private val mAuth = FirebaseAuth.getInstance()
     var verificationOtp = ""
 
@@ -130,9 +128,15 @@ class MainActivity : ComponentActivity() {
     @ExperimentalCoilApi
     @Composable
     fun Navigation() {
+        val context = LocalContext.current
         val navController = rememberNavController()
         NavHost(
-            navController = navController, startDestination = Screen.IntroductionScreen.route
+            navController = navController, startDestination = if (getUserLoggedInState(context)) {
+                Screen.HomeScreen.route
+            } else {
+                Screen.IntroductionScreen.route
+
+            }
         ) {
             composable(
                 route = Screen.IntroductionScreen.route,
@@ -229,6 +233,11 @@ class MainActivity : ComponentActivity() {
                 HomeScreen()
             }
         }
+    }
+
+    private fun getUserLoggedInState(context: Context): Boolean {
+        val sharedPref = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
+        return sharedPref.getBoolean("isUserLoggedIn", false)
     }
 
     @ExperimentalCoilApi
