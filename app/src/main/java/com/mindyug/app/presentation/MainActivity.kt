@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -25,6 +26,8 @@ import com.mindyug.app.presentation.home.MindYugBottomNavigationBar
 import com.mindyug.app.presentation.rewards.Rewards
 import com.mindyug.app.presentation.introduction.IntroductionScreen
 import com.mindyug.app.presentation.login.*
+import com.mindyug.app.presentation.profile.ProfileScreen
+import com.mindyug.app.presentation.settings.SettingsScreen
 import com.mindyug.app.presentation.util.Screen
 import com.mindyug.app.ui.theme.MindYugTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,6 +39,7 @@ class MainActivity : ComponentActivity() {
     private val mAuth = FirebaseAuth.getInstance()
     var verificationOtp = ""
 
+    @ExperimentalFoundationApi
     @ExperimentalCoilApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,6 +129,7 @@ class MainActivity : ComponentActivity() {
 
     }
 
+    @ExperimentalFoundationApi
     @ExperimentalCoilApi
     @Composable
     fun Navigation() {
@@ -230,7 +235,13 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable(route = Screen.HomeScreen.route) {
-                HomeScreen()
+                HomeScreen(navController)
+            }
+            composable(route= Screen.SettingsScreen.route){
+                SettingsScreen()
+            }
+            composable(route= Screen.ProfileScreen.route){
+                ProfileScreen()
             }
         }
     }
@@ -240,9 +251,10 @@ class MainActivity : ComponentActivity() {
         return sharedPref.getBoolean("isUserLoggedIn", false)
     }
 
+    @ExperimentalFoundationApi
     @ExperimentalCoilApi
     @Composable
-    fun HomeScreen() {
+    fun HomeScreen(navController: NavHostController) {
         val navInnerController = rememberNavController()
         MindYugTheme {
             Scaffold(
@@ -253,14 +265,12 @@ class MainActivity : ComponentActivity() {
                     navController = navInnerController, startDestination = Screen.Dashboard.route
                 ) {
                     composable(route = Screen.Dashboard.route) {
-                        Dashboard()
+                        Dashboard(navController = navController)
                     }
                     composable(route = Screen.Rewards.route) {
                         Rewards()
                     }
                 }
-
-
             }
         }
     }

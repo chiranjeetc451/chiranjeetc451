@@ -29,11 +29,15 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesStorageReference() = FirebaseStorage.getInstance().getReference("Users/"+FirebaseAuth.getInstance().currentUser?.uid)
+    fun providesStorageReference() = FirebaseStorage.getInstance()
+        .getReference("Users/")
 
     @Provides
     @Singleton
-    fun provideUserDataRepository(usersList:CollectionReference, storageReference: StorageReference): UserDataRepository {
+    fun provideUserDataRepository(
+        usersList: CollectionReference,
+        storageReference: StorageReference
+    ): UserDataRepository {
         return UserDataRepositoryImpl(usersList, storageReference)
     }
 

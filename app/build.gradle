@@ -103,6 +103,8 @@ dependencies {
     //accompanist adds features which are currently no available in android compose
     implementation "com.google.accompanist:accompanist-pager:$accompanist_version"
     implementation "com.google.accompanist:accompanist-pager-indicators:$accompanist_version"
+    implementation "com.google.accompanist:accompanist-insets:0.17.0"
+
 
     //gson
     implementation 'com.google.code.gson:gson:2.8.7'

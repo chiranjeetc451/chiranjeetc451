@@ -13,6 +13,9 @@ sealed class Screen(val route: String) {
     object Dashboard : Screen("home/dashboard")
     object Rewards : Screen("home/rewards")
 
+    object SettingsScreen : Screen("settings")
+    object ProfileScreen : Screen("profile")
+
 
     fun withArgs(vararg args: String): String {
         return buildString {

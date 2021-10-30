@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.Address
 import com.mindyug.app.domain.model.UserData
@@ -153,6 +154,7 @@ constructor(
                     val prefs= context.getSharedPreferences("userLoginState", MODE_PRIVATE) ?: return@onEach
                     with (prefs.edit()) {
                         putBoolean("isUserLoggedIn", true)
+                        putString("uid", FirebaseAuth.getInstance().currentUser?.uid!!)
                         apply()
                     }
                     Toast.makeText(
@@ -187,11 +189,14 @@ constructor(
                 is Results.Success -> {
 //                    return@onEach result.data?.username != null
                     if (result.data?.username != null) {
-                        navController.navigate(Screen.HomeScreen.route)
+                        navController.navigate(Screen.HomeScreen.route){
+                            popUpTo(Screen.HomeScreen.route)
+                        }
 
                         val prefs= context.getSharedPreferences("userLoginState", MODE_PRIVATE) ?: return@onEach
                         with (prefs.edit()) {
                             putBoolean("isUserLoggedIn", true)
+                            putString("uid", FirebaseAuth.getInstance().currentUser?.uid!!)
                             apply()
                         }
 

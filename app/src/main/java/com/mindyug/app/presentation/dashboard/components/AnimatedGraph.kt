@@ -14,12 +14,22 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
 private const val DividerLengthInDegrees = 1.8f
+val graphColors = listOf(
+    Color(0xFF163D00),
+    Color(0xFF164E1E),
+    Color(0xFF3C6121),
+    Color(0xFF94D17A),
+    Color(0xFF5BC944),
+    Color(0xFF47C267),
+
+    )
+
 
 
 @Composable
 fun AnimatedCircle(
     proportions: List<Float>,
-    colors: List<Color>,
+    colors: List<Color> = graphColors,
     modifier: Modifier = Modifier
 ) {
     val currentState = remember {
