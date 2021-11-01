@@ -11,9 +11,6 @@ import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,16 +20,18 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
 import com.mindyug.app.R
+import com.mindyug.app.domain.model.AppStat
+import com.mindyug.app.presentation.dashboard.util.getDurationBreakdown
 
 @Composable
 fun MindYugStatCard(
     context: Context,
-    packageName: String,
-    progress: Float,
+    appStat: AppStat,
+    ) {
+    val progress = (appStat.foregroundTime / 21600000.00000000).toFloat()
 
-) {
     val ai: ApplicationInfo =
-        context.packageManager.getApplicationInfo(packageName, 0)
+        context.packageManager.getApplicationInfo(appStat.packageName, 0)
 
     val icon: Drawable = context.packageManager.getApplicationIcon(ai)
 
@@ -62,7 +61,7 @@ fun MindYugStatCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                modifier = Modifier.size(80.dp),
+                modifier = Modifier.size(60.dp),
                 painter = painter,
                 contentDescription = null
             )
@@ -79,7 +78,7 @@ fun MindYugStatCard(
             Text(
                 modifier = Modifier
                     .fillMaxWidth(),
-                text = "2 Hr. 30 Min.",
+                text = getDurationBreakdown(appStat.foregroundTime)!!,
                 textAlign = TextAlign.Start,
                 style = MaterialTheme.typography.caption
             )

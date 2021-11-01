@@ -1,6 +1,12 @@
 package com.mindyug.app.presentation
 
+import android.annotation.SuppressLint
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -10,32 +16,40 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.*
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.annotation.ExperimentalCoilApi
-
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.mindyug.app.common.StatisticsViewModel
+import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.Dashboard
 import com.mindyug.app.presentation.home.MindYugBottomNavigationBar
-import com.mindyug.app.presentation.rewards.Rewards
 import com.mindyug.app.presentation.introduction.IntroductionScreen
 import com.mindyug.app.presentation.login.*
 import com.mindyug.app.presentation.profile.ProfileScreen
+import com.mindyug.app.presentation.rewards.Rewards
 import com.mindyug.app.presentation.settings.SettingsScreen
 import com.mindyug.app.presentation.util.Screen
 import com.mindyug.app.ui.theme.MindYugTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: LoginViewModel by viewModels()
+    private val statViewModel: StatisticsViewModel by viewModels()
+    var date: Date = Date()
+
+
     private val mAuth = FirebaseAuth.getInstance()
     var verificationOtp = ""
 
@@ -43,6 +57,10 @@ class MainActivity : ComponentActivity() {
     @ExperimentalCoilApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        statViewModel.loadStatData(getPurifiedList(), date)
+
+
         setContent {
             Navigation()
         }
@@ -237,10 +255,10 @@ class MainActivity : ComponentActivity() {
             composable(route = Screen.HomeScreen.route) {
                 HomeScreen(navController)
             }
-            composable(route= Screen.SettingsScreen.route){
+            composable(route = Screen.SettingsScreen.route) {
                 SettingsScreen()
             }
-            composable(route= Screen.ProfileScreen.route){
+            composable(route = Screen.ProfileScreen.route) {
                 ProfileScreen()
             }
         }
@@ -273,6 +291,111 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+
+    fun getPurifiedList(): MutableList<AppStat> {
+        val list = getStatsList()    // return a list of events
+        val list2 = appList()        // return a list of installed apps
+        val googlePackages = mutableListOf(
+            "com.android.chrome",
+            "com.google.android.youtube",
+            "com.google.android.keep",
+            "com.google.android.gm",
+            "com.google.android.apps.maps",
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.apps.photos",
+            "com.google.android.apps.maps",
+            "com.google.android.apps.tachyon",
+            "com.google.android.apps.youtube.music",
+            "com.google.android.apps.docs",
+            "com.google.android.apps.googleassistant",
+            "com.google.android.apps.nbu.files",
+            "com.google.android.apps.messaging",
+            "com.google.android.calendar"
+        )
+        for (name in googlePackages) {
+            val ai: ApplicationInfo = this.packageManager.getApplicationInfo(
+                name,
+                PackageManager.GET_META_DATA
+            )
+            list2.add(ai)
+
+        }
+        val purifiedList: MutableList<AppStat> = mutableListOf()
+        for (name in list2) {
+//            Log.d("tag", "package: ${app.name}, time: ${app.time} now111")
+//            Log.d("tag","package: ${app.packageName}")
+            var n: Long = 0
+            for (app in list) {
+                if (app.packageName == name.packageName) {
+                    n += app.foregroundTime
+                }
+            }
+            purifiedList.add(AppStat(name.packageName, n))
+        }
+        for (app in purifiedList) {
+            if (app.foregroundTime.equals(0)) {
+                purifiedList.remove(app)
+            }
+        }
+        return purifiedList
+    }
+
+    @Throws(PackageManager.NameNotFoundException::class)
+    fun getStatsList(): MutableList<AppStat> {
+        val usm: UsageStatsManager =
+            (this.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager)
+//        val appList = ArrayList<App>()
+        val appList: MutableList<AppStat> = mutableListOf()
+        val cal = java.util.Calendar.getInstance()
+        cal[Calendar.HOUR_OF_DAY] = 0
+        val startTime = cal.timeInMillis
+        val endTime = System.currentTimeMillis()
+//        val allEvents = ArrayList<UsageEvents.Event>()
+        val allEvents: MutableList<UsageEvents.Event> = mutableListOf()
+        val usageEvents: UsageEvents = usm.queryEvents(startTime, endTime)
+        var event: UsageEvents.Event
+        var app: AppStat?
+        while (usageEvents.hasNextEvent()) {
+            event = UsageEvents.Event()
+            usageEvents.getNextEvent(event)
+            if (event.eventType == 1 || event.eventType == 2) {
+                allEvents.add(event)
+            }
+        }
+
+//        Collections.sort(allEvents, sortEv())
+        for (i in 1 until allEvents.size) {
+            val event0 = allEvents[i]
+            val event1 = allEvents[i - 1]
+            if (event1.eventType == 1 && event0.eventType == 2 && event1.packageName == event0.packageName) {
+//                icon = packageManager.getApplicationIcon(E1.packageName)
+                val diff = event0.timeStamp - event1.timeStamp
+                app = AppStat(
+//                    icon,
+                    event1.packageName,
+                    diff
+                )
+                appList.add(app)
+
+            }
+        }
+
+        return appList
+    }
+
+
+
+
+    @SuppressLint("QueryPermissionsNeeded")
+    fun appList(): MutableList<ApplicationInfo> {
+
+        return packageManager.getInstalledApplications(PackageManager.GET_META_DATA).filterNot {
+            (it.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+            //            packageManager.getLeanbackLaunchIntentForPackage(it.packageName) != null
+
+        } as MutableList<ApplicationInfo>
     }
 }
 

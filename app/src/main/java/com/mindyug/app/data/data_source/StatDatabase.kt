@@ -11,8 +11,8 @@ import com.mindyug.app.domain.model.StatData
     version = 1
 )
 @TypeConverters(Converters::class)
-abstract class NoteDatabase : RoomDatabase() {
-    abstract val noteDao: StatDataDao
+abstract class StatDatabase : RoomDatabase() {
+    abstract val statDao: StatDataDao
     companion object{
         const val DATABASE_NAME = "stats_db"
     }

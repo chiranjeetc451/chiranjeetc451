@@ -8,11 +8,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -22,49 +19,38 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
-import com.google.accompanist.insets.LocalWindowInsets
 import com.mindyug.app.R
+import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.components.AnimatedCircle
 import com.mindyug.app.presentation.dashboard.components.MindYugStatCard
-import com.mindyug.app.presentation.dashboard.util.AppBarCollapsedHeight
-import com.mindyug.app.presentation.dashboard.util.AppBarExpendedHeight
 import com.mindyug.app.presentation.util.Screen
-import kotlin.math.max
-import kotlin.math.min
 
 @ExperimentalCoilApi
 @ExperimentalFoundationApi
 @Composable
 fun Dashboard(
     viewModel: DashboardViewModel = hiltViewModel(),
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     val context = LocalContext.current
     val sharedPref = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
     val uid = sharedPref.getString("uid", null)
+
     LaunchedEffect(Unit) {
         viewModel.getProfilePictureUri(uid!!)
     }
+
     val imageUri = viewModel.profilePictureUri.value.uri
-    val scrollState = rememberLazyListState()
 
     Column {
         TopBar(
@@ -96,25 +82,10 @@ fun Dashboard(
                 )
             }
         }
-        val numbers = (0..20).toList()
 
-        LazyVerticalGrid(
-            cells = GridCells.Fixed(2),
-            modifier = Modifier.padding(16.dp),
-            state = scrollState
-        ) {
-            items(numbers.size) {
-                MindYugStatCard(
-                    context,
-                    "com.whatsapp",
-                    0.2f
-                )
+//        val numbers = mutableListOf(AppStat("com.whatsapp", 6799999), AppStat("com.android.chrome",565776))
 
-
-            }
-        }
-
-
+        AppStatGridList(numbers, context)
     }
 
 
@@ -259,6 +230,23 @@ fun TopBar(
         },
         elevation = 0.dp
     )
+}
+
+@ExperimentalFoundationApi
+@Composable
+fun AppStatGridList(list: List<AppStat>, context:Context) {
+    LazyVerticalGrid(
+        cells = GridCells.Fixed(2),
+        modifier = Modifier.padding(16.dp),
+    ) {
+        items(list.size) {
+            MindYugStatCard(
+                context,
+                list[it]
+            )
+        }
+    }
+
 }
 
 
