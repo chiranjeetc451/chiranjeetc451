@@ -1,13 +1,17 @@
 package com.mindyug.app.presentation
 
 import android.annotation.SuppressLint
+import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.os.Process
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil.annotation.ExperimentalCoilApi
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -32,8 +37,10 @@ import com.mindyug.app.common.StatisticsViewModel
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.Dashboard
 import com.mindyug.app.presentation.home.MindYugBottomNavigationBar
+import com.mindyug.app.presentation.home.RequestPermissionScreen
 import com.mindyug.app.presentation.introduction.IntroductionScreen
 import com.mindyug.app.presentation.login.*
+import com.mindyug.app.presentation.notifications.NotificationsScreen
 import com.mindyug.app.presentation.profile.ProfileScreen
 import com.mindyug.app.presentation.rewards.Rewards
 import com.mindyug.app.presentation.settings.SettingsScreen
@@ -53,6 +60,7 @@ class MainActivity : ComponentActivity() {
     private val mAuth = FirebaseAuth.getInstance()
     var verificationOtp = ""
 
+    @ExperimentalPagerApi
     @ExperimentalFoundationApi
     @ExperimentalCoilApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -147,6 +155,7 @@ class MainActivity : ComponentActivity() {
 
     }
 
+    @ExperimentalPagerApi
     @ExperimentalFoundationApi
     @ExperimentalCoilApi
     @Composable
@@ -253,13 +262,26 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable(route = Screen.HomeScreen.route) {
-                HomeScreen(navController)
+                if (!userGrantsPermission()) {
+                    RequestPermissionScreen(
+                        onClick =
+                        {
+                            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                        }
+                    )
+                } else {
+                    HomeScreen(navController)
+
+                }
             }
             composable(route = Screen.SettingsScreen.route) {
-                SettingsScreen()
+                SettingsScreen(navController)
             }
             composable(route = Screen.ProfileScreen.route) {
-                ProfileScreen()
+                ProfileScreen(navController)
+            }
+            composable(route = Screen.NotificationsScreen.route){
+                NotificationsScreen(navController)
             }
         }
     }
@@ -269,6 +291,7 @@ class MainActivity : ComponentActivity() {
         return sharedPref.getBoolean("isUserLoggedIn", false)
     }
 
+    @ExperimentalPagerApi
     @ExperimentalFoundationApi
     @ExperimentalCoilApi
     @Composable
@@ -386,8 +409,6 @@ class MainActivity : ComponentActivity() {
     }
 
 
-
-
     @SuppressLint("QueryPermissionsNeeded")
     fun appList(): MutableList<ApplicationInfo> {
 
@@ -397,6 +418,16 @@ class MainActivity : ComponentActivity() {
 
         } as MutableList<ApplicationInfo>
     }
+
+    private fun userGrantsPermission(): Boolean {
+        val appOps = getSystemService(APP_OPS_SERVICE) as AppOpsManager
+        val mode = appOps.checkOpNoThrow(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            Process.myUid(), packageName
+        )
+        return mode == AppOpsManager.MODE_ALLOWED
+    }
+
 }
 
 

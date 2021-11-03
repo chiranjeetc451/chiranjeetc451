@@ -6,6 +6,7 @@ import java.util.*
 
 @Entity
 data class StatData(
-    val dailyUsedAppStatsList: List<AppStat>,
-    @PrimaryKey val date: Date? = null
+    val dailyUsedAppStatsList: List<AppStat>?,
+@PrimaryKey
+val date: Date? = null
 )

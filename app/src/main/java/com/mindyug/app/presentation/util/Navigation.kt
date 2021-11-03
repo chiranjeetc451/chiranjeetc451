@@ -15,6 +15,7 @@ sealed class Screen(val route: String) {
 
     object SettingsScreen : Screen("settings")
     object ProfileScreen : Screen("profile")
+    object NotificationsScreen : Screen("notifications")
 
 
     fun withArgs(vararg args: String): String {

@@ -4,14 +4,16 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.StatData
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Dao
 interface StatDataDao {
 
     @Query("SELECT * FROM statdata WHERE date = :date")
-    suspend fun getStatDataByDate(date:Date): StatData
+    suspend fun getStatDataByDate(date: Date): StatData
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun setStatData(statData: StatData)

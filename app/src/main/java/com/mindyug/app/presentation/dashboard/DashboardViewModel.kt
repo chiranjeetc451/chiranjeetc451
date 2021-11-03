@@ -1,6 +1,7 @@
 package com.mindyug.app.presentation.dashboard
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -12,7 +13,11 @@ import com.mindyug.app.domain.model.StatData
 import com.mindyug.app.domain.repository.StatDataRepository
 import com.mindyug.app.domain.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.*
@@ -32,6 +37,14 @@ constructor(
     )
 
     val profilePictureUri: State<ProfilePictureState> = _profilePictureUri
+
+    private val _appListGrid = mutableStateOf(
+        AppListGrid()
+    )
+    val appListGrid: State<AppListGrid> = _appListGrid
+
+    private var getAppStatsJob: Job? = null
+
 
     fun getProfilePictureUri(uid: String) {
         userDataRepository.getProfilePictureUri(uid).onEach { result ->
@@ -56,12 +69,14 @@ constructor(
         }.launchIn(viewModelScope)
     }
 
-    fun getStatData(date: Date): List<AppStat>? {
-        var data: StatData? = null
-        viewModelScope.launch {
-            data = statDataRepository.getStatDataByDate(date)
+    fun getStatData(date: Date) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _appListGrid.value = appListGrid.value.copy(
+                isLoading = false,
+                list = statDataRepository.getStatDataByDate(date).dailyUsedAppStatsList!! as MutableList<AppStat>
+            )
         }
-        return data?.dailyUsedAppStatsList
-    }
+            }
+
 
 }

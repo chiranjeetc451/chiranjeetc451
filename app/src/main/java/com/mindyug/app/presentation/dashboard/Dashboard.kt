@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -34,6 +35,7 @@ import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.components.AnimatedCircle
 import com.mindyug.app.presentation.dashboard.components.MindYugStatCard
 import com.mindyug.app.presentation.util.Screen
+import java.util.*
 
 @ExperimentalCoilApi
 @ExperimentalFoundationApi
@@ -46,8 +48,11 @@ fun Dashboard(
     val sharedPref = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
     val uid = sharedPref.getString("uid", null)
 
+    val listState = viewModel.appListGrid.value
+
     LaunchedEffect(Unit) {
         viewModel.getProfilePictureUri(uid!!)
+//        viewModel.getStatData(Date())
     }
 
     val imageUri = viewModel.profilePictureUri.value.uri
@@ -83,9 +88,25 @@ fun Dashboard(
             }
         }
 
-//        val numbers = mutableListOf(AppStat("com.whatsapp", 6799999), AppStat("com.android.chrome",565776))
+        val numbers =
+            mutableListOf(AppStat("com.whatsapp", 6799999), AppStat("com.android.chrome", 565776))
 
-        AppStatGridList(numbers, context)
+        if (!listState.isLoading) {
+            AppStatGridList(numbers, context)
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(30.dp),
+                    strokeWidth = 3.dp,
+
+                    color = Color.White
+                )
+            }
+        }
+
     }
 
 
@@ -205,7 +226,7 @@ fun TopBar(
 
 
             IconButton(
-                onClick = { /* TODO: Open notifications */ }
+                onClick = { navController.navigate(Screen.NotificationsScreen.route) }
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
@@ -217,12 +238,10 @@ fun TopBar(
                     navController.navigate(Screen.ProfileScreen.route)
                 }
             ) {
-//                Icon(
-//                    imageVector = Icons.Default.AccountCircle,
-//                    contentDescription = "account"
-//                )
                 Image(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape),
                     painter = painter,
                     contentDescription = "Display picture"
                 )
@@ -234,7 +253,7 @@ fun TopBar(
 
 @ExperimentalFoundationApi
 @Composable
-fun AppStatGridList(list: List<AppStat>, context:Context) {
+fun AppStatGridList(list: List<AppStat>, context: Context) {
     LazyVerticalGrid(
         cells = GridCells.Fixed(2),
         modifier = Modifier.padding(16.dp),

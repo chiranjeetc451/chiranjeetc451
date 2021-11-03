@@ -36,7 +36,8 @@ fun EnterNameScreen(
 
 
     MindYugTheme {
-        Scaffold(topBar = {
+        Scaffold(
+            topBar = {
             IconButton(
                 onClick = { navHostController.navigateUp() },
             ) {

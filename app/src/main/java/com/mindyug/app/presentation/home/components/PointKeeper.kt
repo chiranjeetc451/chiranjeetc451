@@ -13,9 +13,11 @@ import androidx.compose.ui.unit.dp
 import com.mindyug.app.R
 
 @Composable
-fun PointKeeper(color: Color, score: String) {
-    Surface(color = Color(0xFF2CE07F),
-        shape = RoundedCornerShape(percent = 50)) {
+fun PointKeeper(color: Color = Color(0xFF002333), score: String) {
+    Surface(
+        color = Color(0xFF2CE07F),
+        shape = RoundedCornerShape(percent = 50)
+    ) {
         Row(
             modifier = Modifier.padding(8.dp),
             horizontalArrangement = Arrangement.Center,
