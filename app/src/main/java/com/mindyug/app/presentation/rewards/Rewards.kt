@@ -451,8 +451,6 @@ fun RewardsContent(state: ScrollState) {
 @Composable
 fun Content() {
     val state = rememberScrollState()
-
     RewardsContent(state)
-
 }
 

@@ -1,51 +1,29 @@
-package com.mindyug.app.presentation.dashboard
+package com.mindyug.app.presentation.profile
 
 import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.R
+import com.mindyug.app.domain.repository.UserDataRepository
 import com.mindyug.app.common.ProfilePictureState
 import com.mindyug.app.data.repository.Results
-import com.mindyug.app.domain.model.AppStat
-import com.mindyug.app.domain.repository.StatDataRepository
-import com.mindyug.app.domain.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import java.util.*
 import javax.inject.Inject
 
-
 @HiltViewModel
-class DashboardViewModel @Inject
+class ProfileViewModel @Inject
 constructor(
-    private val userDataRepository: UserDataRepository,
-    private val statDataRepository: StatDataRepository
-
+    private val userDataRepository: UserDataRepository
 ) : ViewModel() {
-
     private val _profilePictureUri = mutableStateOf(
         ProfilePictureState()
     )
 
     val profilePictureUri: State<ProfilePictureState> = _profilePictureUri
-
-    private val _appListGrid = mutableStateOf(
-        AppListGrid()
-    )
-    val appListGrid: State<AppListGrid> = _appListGrid
-
-    private var getAppStatsJob: Job? = null
-
-    init {
-     getProfilePictureUri(FirebaseAuth.getInstance().currentUser?.uid!!)
-    }
 
     fun getProfilePictureUri(uid: String) {
         userDataRepository.getProfilePictureUri(uid).onEach { result ->
@@ -69,17 +47,4 @@ constructor(
 
         }.launchIn(viewModelScope)
     }
-
-    fun getStatData(date: Date) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _appListGrid.value = appListGrid.value.copy(
-                isLoading = false,
-                list = statDataRepository.getStatDataByDate(date).dailyUsedAppStatsList!! as MutableList<AppStat>
-            )
-        }
-    }
-
-
-
-
 }

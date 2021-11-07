@@ -33,6 +33,43 @@ class UserDataRepositoryImpl
         }
     }
 
+    override fun setUserDataFromUid(userData: UserData, uid: String): Flow<Results<String>> = flow {
+        try {
+            emit(Results.Loading<String>())
+
+            usersList.document(uid).set(userData)
+            emit(Results.Success<String>(data = "Successful"))
+
+        } catch (e: Exception) {
+            emit(Results.Error<String>(message = "Error occurred"))
+
+        }
+    }
+
+    override fun getUserFromUid(uid: String): Flow<Results<UserData>> = flow {
+
+        try {
+            emit(Results.Loading<UserData>())
+            val user = usersList
+                .document(uid)
+                .get()
+                .await()
+                .toObject(UserData::class.java)
+
+
+            emit(Results.Success<UserData>(data = user))
+
+
+        } catch (e: Exception) {
+            emit(Results.Error<UserData>(message = "Error occurred"))
+
+        }
+    }
+
+    override fun updateProfilePictureFromUid(uri: Uri, uid: String) {
+        storageReference.child(uid).putFile(uri)
+    }
+
     override fun uploadProfilePic(uri: Uri) {
         storageReference.child(FirebaseAuth.getInstance().currentUser?.uid!!).putFile(uri)
     }

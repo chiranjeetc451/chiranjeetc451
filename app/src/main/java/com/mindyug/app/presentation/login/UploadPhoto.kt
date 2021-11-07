@@ -138,14 +138,15 @@ fun UploadPhotoScreen(
 //                    navHostController.navigate(Screen.HomeScreen.route)
                         imageUri?.let { it1 -> viewModel.uploadProfilePic(it1) }
                         viewModel.addUser(
-                            name = name,
+                            enteredName = name,
                             username = username,
                             number = number,
                             context = context,
                             navController = navHostController
                         )
                     },
-                    enabled = btnNext.isEnabled
+                    enabled = btnNext.isEnabled,
+                    isLoading = btnNext.isLoading
                 ) {
                     Text(text = "Get started")
                 }

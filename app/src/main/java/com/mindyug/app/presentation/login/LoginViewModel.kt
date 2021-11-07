@@ -2,7 +2,6 @@ package com.mindyug.app.presentation.login
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -10,18 +9,20 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
+import com.mindyug.app.common.MindYugButtonState
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.Address
 import com.mindyug.app.domain.model.UserData
 import com.mindyug.app.domain.repository.UserDataRepository
+import com.mindyug.app.common.util.validateName
+import com.mindyug.app.common.util.validateNumber
+import com.mindyug.app.common.util.validateUsername
 import com.mindyug.app.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.util.regex.Pattern
 import javax.inject.Inject
 
 @HiltViewModel
@@ -111,50 +112,34 @@ constructor(
     }
 
 
-    private fun validateNumber(text: String): Boolean {
-        val reg = "[6-9]{1}[0-9]{9}"
-        val pattern: Pattern = Pattern.compile(reg)
-        return pattern.matcher(text).find() && text.isNotEmpty()
-    }
-
-    private fun validateName(text: String): Boolean {
-        val reg = "^[a-zA-Z]{1,}(?: [a-zA-Z]+){0,5}\$"
-        val pattern: Pattern = Pattern.compile(reg)
-        return pattern.matcher(text).find() && text.isNotEmpty()
-    }
-
-
-    fun validateUsername(text: String): Boolean {
-        val reg = "^([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\\.(?!\\.))){0,28}(?:[A-Za-z0-9_]))?)\$"
-        val pattern: Pattern = Pattern.compile(reg)
-        return pattern.matcher(text).find() && text.isNotEmpty()
-    }
-
     fun uploadProfilePic(uri: Uri) {
         userDataRepository.uploadProfilePic(uri)
     }
 
     fun addUser(
-        name: String,
+        enteredName: String,
         username: String,
         number: String,
         context: Context,
         navController: NavHostController
     ) {
-        val user = UserData(name, username, number, Address("", "", "", "", "", "", "", ""))
+        val user = UserData(enteredName, username, number, Address("", "", "", "", "", "", "", ""))
         userDataRepository.setUserData(user).onEach { result ->
             when (result) {
                 is Results.Loading -> {
                     _btnNext.value = btnNext.value.copy(
-                        isEnabled = false
+                        isEnabled = false,
+                        isLoading = true,
                     )
                 }
                 is Results.Success -> {
                     navController.navigate(Screen.HomeScreen.route)
-                    val prefs= context.getSharedPreferences("userLoginState", MODE_PRIVATE) ?: return@onEach
-                    with (prefs.edit()) {
+                    val prefs = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
+                        ?: return@onEach
+                    with(prefs.edit()) {
                         putBoolean("isUserLoggedIn", true)
                         putString("uid", FirebaseAuth.getInstance().currentUser?.uid!!)
+                        putString("name", enteredName)
                         apply()
                     }
                     Toast.makeText(
@@ -166,7 +151,7 @@ constructor(
                 is Results.Error -> {
                     _btnNext.value = btnNext.value.copy(
                         error = "Unknown error occurred. Please check your internet connection.",
-                        isEnabled = true
+                        isEnabled = true,
                     )
                 }
 
@@ -189,14 +174,16 @@ constructor(
                 is Results.Success -> {
 //                    return@onEach result.data?.username != null
                     if (result.data?.username != null) {
-                        navController.navigate(Screen.HomeScreen.route){
+                        navController.navigate(Screen.HomeScreen.route) {
                             popUpTo(Screen.HomeScreen.route)
                         }
 
-                        val prefs= context.getSharedPreferences("userLoginState", MODE_PRIVATE) ?: return@onEach
-                        with (prefs.edit()) {
+                        val prefs = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
+                            ?: return@onEach
+                        with(prefs.edit()) {
                             putBoolean("isUserLoggedIn", true)
                             putString("uid", FirebaseAuth.getInstance().currentUser?.uid!!)
+                            putString("name", result.data.name)
                             apply()
                         }
 

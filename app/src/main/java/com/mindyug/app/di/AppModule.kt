@@ -24,7 +24,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-
     @Provides
     @Singleton
     fun providesFirestoreInstance() = FirebaseFirestore.getInstance()
@@ -46,22 +45,6 @@ object AppModule {
     ): UserDataRepository {
         return UserDataRepositoryImpl(usersList, storageReference)
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Provides
     @Singleton

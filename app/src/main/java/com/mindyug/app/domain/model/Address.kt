@@ -11,5 +11,4 @@ data class Address(
     val country: String
 ) {
     constructor() : this(null, "", null, "", null, "", "", "")
-
 }

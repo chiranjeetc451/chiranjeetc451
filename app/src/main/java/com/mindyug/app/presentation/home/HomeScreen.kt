@@ -18,8 +18,6 @@ import com.mindyug.app.presentation.home.components.PointKeeper
 import com.mindyug.app.ui.theme.MindYugTheme
 
 
-
-
 @Composable
 fun MindYugBottomNavigationBar(navController: NavController) {
     MindYugTheme {
@@ -102,5 +100,7 @@ fun MindYugBottomNavigationBar(navController: NavController) {
         }
     }
 }
+
+
 
 

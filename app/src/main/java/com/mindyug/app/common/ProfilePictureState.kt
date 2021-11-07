@@ -1,4 +1,4 @@
-package com.mindyug.app.presentation.dashboard
+package com.mindyug.app.common
 
 import android.net.Uri
 import com.mindyug.app.R

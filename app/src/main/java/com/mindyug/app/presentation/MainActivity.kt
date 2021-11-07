@@ -17,9 +17,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.material.Scaffold
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -38,15 +43,23 @@ import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.Dashboard
 import com.mindyug.app.presentation.home.MindYugBottomNavigationBar
 import com.mindyug.app.presentation.home.RequestPermissionScreen
+import com.mindyug.app.presentation.home.components.SheetCollapsed
+import com.mindyug.app.presentation.home.components.SheetContent
+import com.mindyug.app.presentation.home.components.SheetExpanded
+import com.mindyug.app.presentation.home.util.currentFraction
 import com.mindyug.app.presentation.introduction.IntroductionScreen
 import com.mindyug.app.presentation.login.*
 import com.mindyug.app.presentation.notifications.NotificationsScreen
+import com.mindyug.app.presentation.points.PointsScreen
 import com.mindyug.app.presentation.profile.ProfileScreen
 import com.mindyug.app.presentation.rewards.Rewards
+import com.mindyug.app.presentation.settings.AccountSettings
+import com.mindyug.app.presentation.settings.AddressScreen
 import com.mindyug.app.presentation.settings.SettingsScreen
 import com.mindyug.app.presentation.util.Screen
 import com.mindyug.app.ui.theme.MindYugTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -60,6 +73,7 @@ class MainActivity : ComponentActivity() {
     private val mAuth = FirebaseAuth.getInstance()
     var verificationOtp = ""
 
+    @ExperimentalMaterialApi
     @ExperimentalPagerApi
     @ExperimentalFoundationApi
     @ExperimentalCoilApi
@@ -155,6 +169,7 @@ class MainActivity : ComponentActivity() {
 
     }
 
+    @ExperimentalMaterialApi
     @ExperimentalPagerApi
     @ExperimentalFoundationApi
     @ExperimentalCoilApi
@@ -280,8 +295,14 @@ class MainActivity : ComponentActivity() {
             composable(route = Screen.ProfileScreen.route) {
                 ProfileScreen(navController)
             }
-            composable(route = Screen.NotificationsScreen.route){
+            composable(route = Screen.NotificationsScreen.route) {
                 NotificationsScreen(navController)
+            }
+            composable(route = Screen.AccountSettings.route) {
+                AccountSettings(navController)
+            }
+            composable(route = Screen.Address.route) {
+                AddressScreen(navController)
             }
         }
     }
@@ -291,17 +312,51 @@ class MainActivity : ComponentActivity() {
         return sharedPref.getBoolean("isUserLoggedIn", false)
     }
 
+    @ExperimentalMaterialApi
     @ExperimentalPagerApi
     @ExperimentalFoundationApi
     @ExperimentalCoilApi
     @Composable
     fun HomeScreen(navController: NavHostController) {
         val navInnerController = rememberNavController()
-        MindYugTheme {
-            Scaffold(
-                bottomBar = { MindYugBottomNavigationBar(navController = navInnerController) }
-            ) {
 
+        val scope = rememberCoroutineScope()
+        val scaffoldState = rememberBottomSheetScaffoldState(
+            bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
+        )
+        val sheetToggle: () -> Unit = {
+            scope.launch {
+                if (scaffoldState.bottomSheetState.isCollapsed) {
+                    scaffoldState.bottomSheetState.expand()
+                } else {
+                    scaffoldState.bottomSheetState.collapse()
+                }
+            }
+        }
+        val radius = (30 * scaffoldState.currentFraction).dp
+
+        MindYugTheme {
+
+            BottomSheetScaffold(
+                modifier = Modifier.fillMaxSize(),
+                scaffoldState = scaffoldState,
+                sheetShape = RoundedCornerShape(topStart = radius, topEnd = radius),
+                sheetContent = {
+                    SheetContent {
+                        SheetExpanded {
+                            PointsScreen()
+                        }
+                        SheetCollapsed(
+                            isCollapsed = scaffoldState.bottomSheetState.isCollapsed,
+                            currentFraction = scaffoldState.currentFraction,
+                            onSheetClick = sheetToggle
+                        ) {
+                            MindYugBottomNavigationBar(navController = navInnerController)
+                        }
+                    }
+                },
+                sheetPeekHeight = 70.dp,
+            ) {
                 NavHost(
                     navController = navInnerController, startDestination = Screen.Dashboard.route
                 ) {
@@ -313,7 +368,14 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+
         }
+
+
+//        Scaffold (
+//                bottomBar = {  }
+//                ) {
+//        }
     }
 
 
@@ -323,7 +385,6 @@ class MainActivity : ComponentActivity() {
         val googlePackages = mutableListOf(
             "com.android.chrome",
             "com.google.android.youtube",
-            "com.google.android.keep",
             "com.google.android.gm",
             "com.google.android.apps.maps",
             "com.google.android.googlequicksearchbox",
@@ -335,15 +396,19 @@ class MainActivity : ComponentActivity() {
             "com.google.android.apps.googleassistant",
             "com.google.android.apps.nbu.files",
             "com.google.android.apps.messaging",
-            "com.google.android.calendar"
+            "com.google.android.calendar",
+            "com.google.android.keep",
         )
         for (name in googlePackages) {
-            val ai: ApplicationInfo = this.packageManager.getApplicationInfo(
-                name,
-                PackageManager.GET_META_DATA
-            )
+            val ai: ApplicationInfo = try {
+                this.packageManager.getApplicationInfo(
+                    name,
+                    PackageManager.GET_META_DATA
+                )
+            } catch (e: Exception) {
+                continue
+            }
             list2.add(ai)
-
         }
         val purifiedList: MutableList<AppStat> = mutableListOf()
         for (name in list2) {
@@ -429,7 +494,6 @@ class MainActivity : ComponentActivity() {
     }
 
 }
-
 
 
 

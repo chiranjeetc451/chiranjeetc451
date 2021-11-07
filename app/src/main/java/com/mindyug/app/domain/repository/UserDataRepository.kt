@@ -7,7 +7,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserDataRepository {
     fun setUserData(userData: UserData): Flow<Results<String>>
+    fun setUserDataFromUid(userData: UserData, uid:String): Flow<Results<String>>
+
     fun uploadProfilePic(uri: Uri)
+    fun updateProfilePictureFromUid(uri: Uri, uid: String)
     fun getUsernameFromUid(): Flow<Results<UserData>>
-    fun getProfilePictureUri(uid:String): Flow<Results<Uri>>
+    fun getUserFromUid(uid:String): Flow<Results<UserData>>
+    fun getProfilePictureUri(uid: String): Flow<Results<Uri>>
 }

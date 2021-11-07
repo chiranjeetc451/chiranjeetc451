@@ -36,7 +36,7 @@ fun NotificationsScreen(navHostController: NavHostController) {
                     Spacer(modifier = Modifier.width(115.dp))
                     Text(
 
-                        text = "Notifiactions",
+                        text = "Notifications",
                         color = Color.White,
 
                         )

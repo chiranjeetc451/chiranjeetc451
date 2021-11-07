@@ -90,7 +90,6 @@ fun EnterNameScreen(
                             textAlign = TextAlign.Start
                         )
                     }
-
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
