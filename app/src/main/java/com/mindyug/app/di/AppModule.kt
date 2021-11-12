@@ -11,12 +11,14 @@ import com.mindyug.app.data.data_source.StatDatabase
 import com.mindyug.app.data.repository.StatDataRepositoryImpl
 import com.mindyug.app.data.repository.UserDataRepositoryImpl
 import com.mindyug.app.domain.model.StatData
+import com.mindyug.app.domain.repository.PointRepository
 import com.mindyug.app.domain.repository.StatDataRepository
 import com.mindyug.app.domain.repository.UserDataRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 
@@ -31,6 +33,11 @@ object AppModule {
     @Provides
     @Singleton
     fun providesUsersList(onlineDatabase: FirebaseFirestore) = onlineDatabase.collection("users")
+//
+//    @Provides
+//    @Singleton
+//    @Named("points")
+//    fun providesPointList(onlinePointDatabase: FirebaseFirestore) = onlinePointDatabase.collection("points")
 
     @Provides
     @Singleton
@@ -45,6 +52,16 @@ object AppModule {
     ): UserDataRepository {
         return UserDataRepositoryImpl(usersList, storageReference)
     }
+
+//    @Provides
+//    @Singleton
+//    fun providePointRepository(
+//        pointList: CollectionReference,
+//    ): PointRepository {
+//        return PointRepositoryImpl(
+//            pointList
+//        )
+//    }
 
     @Provides
     @Singleton
@@ -62,6 +79,5 @@ object AppModule {
     fun provideStatDataRepository(db: StatDatabase): StatDataRepository {
         return StatDataRepositoryImpl(db.statDao)
     }
-
 
 }

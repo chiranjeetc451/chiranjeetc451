@@ -31,6 +31,7 @@ import coil.transform.CircleCropTransformation
 import com.google.api.ResourceDescriptor
 import com.mindyug.app.R
 import com.mindyug.app.common.components.PointsList
+import com.mindyug.app.common.components.getDateAsStringFromDate
 import com.mindyug.app.domain.model.PointItem
 import com.mindyug.app.presentation.dashboard.DashboardViewModel
 import com.mindyug.app.presentation.util.Screen
@@ -126,7 +127,7 @@ fun ProfileScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val ab = mutableListOf(PointItem(Date(),-90000), PointItem(Date(),97000), PointItem(Date(),80000))
+                val ab = mutableListOf(PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",-90000), PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",97000), PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",80000))
 
                 PointsList(ab)
 

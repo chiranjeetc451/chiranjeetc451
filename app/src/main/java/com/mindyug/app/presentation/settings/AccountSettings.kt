@@ -49,7 +49,7 @@ fun AccountSettings(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { navHostController.navigate(Screen.ProfileScreen.route) },
+                        onClick = { navHostController.navigate(Screen.SettingsScreen.route) },
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.ArrowBackIos,

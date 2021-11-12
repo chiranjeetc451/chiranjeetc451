@@ -12,8 +12,8 @@ import java.util.*
 @Dao
 interface StatDataDao {
 
-    @Query("SELECT * FROM statdata WHERE date = :date")
-    suspend fun getStatDataByDate(date: Date): StatData
+    @Query("SELECT * FROM statdata WHERE loggedDate = :loggedDate")
+    fun getStatDataByDate(loggedDate: String): Flow<StatData>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun setStatData(statData: StatData)

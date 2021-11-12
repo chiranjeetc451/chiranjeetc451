@@ -17,9 +17,15 @@ constructor(
     private val statDataRepository: StatDataRepository
 ) : ViewModel() {
 
-    fun loadStatData(list: MutableList<AppStat>, date: Date) {
+    fun loadStatData(
+        list: MutableList<AppStat>,
+        date: String,
+        month: String,
+        year: String,
+        loggedDate: String
+    ) {
         viewModelScope.launch {
-            statDataRepository.setStatData(StatData(list, date))
+            statDataRepository.setStatData(StatData(list, date, month, year, loggedDate))
         }
     }
 }

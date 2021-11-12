@@ -8,8 +8,8 @@ import java.util.*
 
 interface StatDataRepository {
 
-    suspend fun getStatDataByDate(date: Date): StatData
-    
+    fun getStatDataByDate(loggedDate: String): Flow<StatData>
+
     suspend fun setStatData(statData: StatData)
 
 }

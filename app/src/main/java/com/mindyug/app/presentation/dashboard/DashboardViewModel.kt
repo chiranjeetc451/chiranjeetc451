@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.R
 import com.mindyug.app.common.ProfilePictureState
+import com.mindyug.app.common.util.getPrimaryKeyDate
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.domain.repository.StatDataRepository
@@ -71,15 +72,15 @@ constructor(
     }
 
     fun getStatData(date: Date) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _appListGrid.value = appListGrid.value.copy(
+        getAppStatsJob?.cancel()
+        getAppStatsJob = statDataRepository.getStatDataByDate(getPrimaryKeyDate(date)).onEach {
+            _appListGrid.value =appListGrid.value.copy(
                 isLoading = false,
-                list = statDataRepository.getStatDataByDate(date).dailyUsedAppStatsList!! as MutableList<AppStat>
+                list = it.dailyUsedAppStatsList
             )
-        }
+
+
+        }.launchIn(viewModelScope)
+
     }
-
-
-
-
 }

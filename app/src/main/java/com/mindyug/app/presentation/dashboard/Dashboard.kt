@@ -34,6 +34,7 @@ import com.mindyug.app.R
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.components.AnimatedCircle
 import com.mindyug.app.presentation.dashboard.components.MindYugStatCard
+import com.mindyug.app.presentation.dashboard.components.TempPointKeeper
 import com.mindyug.app.presentation.util.Screen
 import java.util.*
 
@@ -52,7 +53,7 @@ fun Dashboard(
 
     LaunchedEffect(Unit) {
         viewModel.getProfilePictureUri(uid!!)
-//        viewModel.getStatData(Date())
+        viewModel.getStatData(Date())
     }
 
     val imageUri = viewModel.profilePictureUri.value.uri
@@ -88,11 +89,9 @@ fun Dashboard(
             }
         }
 
-        val numbers =
-            mutableListOf(AppStat("com.whatsapp", 6799999), AppStat("com.android.chrome", 565776))
 
         if (!listState.isLoading) {
-            AppStatGridList(numbers, context)
+            AppStatGridList(listState.list!!, context)
         } else {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -209,6 +208,14 @@ fun TopBar(
                 }
 
             }
+            Spacer(modifier = Modifier.width(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                TempPointKeeper(points = 453)
+            }
 
 
         },
@@ -253,7 +260,7 @@ fun TopBar(
 
 @ExperimentalFoundationApi
 @Composable
-fun AppStatGridList(list: List<AppStat>, context: Context) {
+fun AppStatGridList(list: MutableList<AppStat>, context: Context) {
     LazyVerticalGrid(
         cells = GridCells.Fixed(2),
         modifier = Modifier.padding(16.dp),

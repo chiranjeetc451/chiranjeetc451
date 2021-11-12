@@ -7,11 +7,12 @@ import com.mindyug.app.domain.repository.StatDataRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import java.util.*
+import javax.inject.Inject
 
 class StatDataRepositoryImpl(private val dao: StatDataDao) : StatDataRepository {
 
-    override suspend fun getStatDataByDate(date: Date): StatData {
-        return dao.getStatDataByDate(date)
+    override fun getStatDataByDate(loggedDate: String): Flow<StatData> {
+        return dao.getStatDataByDate(loggedDate)
     }
 
     override suspend fun setStatData(statData: StatData) {

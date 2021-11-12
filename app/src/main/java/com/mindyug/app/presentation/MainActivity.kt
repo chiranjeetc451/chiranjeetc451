@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -39,14 +38,14 @@ import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.mindyug.app.common.StatisticsViewModel
+import com.mindyug.app.common.util.getDateFromDate
+import com.mindyug.app.common.util.getMonthFromDate
+import com.mindyug.app.common.util.getPrimaryKeyDate
+import com.mindyug.app.common.util.getYearFromDate
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.Dashboard
-import com.mindyug.app.presentation.home.MindYugBottomNavigationBar
 import com.mindyug.app.presentation.home.RequestPermissionScreen
-import com.mindyug.app.presentation.home.components.SheetCollapsed
 import com.mindyug.app.presentation.home.components.SheetContent
-import com.mindyug.app.presentation.home.components.SheetExpanded
-import com.mindyug.app.presentation.home.util.currentFraction
 import com.mindyug.app.presentation.introduction.IntroductionScreen
 import com.mindyug.app.presentation.login.*
 import com.mindyug.app.presentation.notifications.NotificationsScreen
@@ -59,7 +58,6 @@ import com.mindyug.app.presentation.settings.SettingsScreen
 import com.mindyug.app.presentation.util.Screen
 import com.mindyug.app.ui.theme.MindYugTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -80,7 +78,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        statViewModel.loadStatData(getPurifiedList(), date)
+        statViewModel.loadStatData(
+            getPurifiedList(),
+            getDateFromDate(Date()),
+            getMonthFromDate(Date()),
+            getYearFromDate(Date()),
+            getPrimaryKeyDate(Date())
+        )
 
 
         setContent {
@@ -320,42 +324,31 @@ class MainActivity : ComponentActivity() {
     fun HomeScreen(navController: NavHostController) {
         val navInnerController = rememberNavController()
 
-        val scope = rememberCoroutineScope()
+
         val scaffoldState = rememberBottomSheetScaffoldState(
             bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
         )
-        val sheetToggle: () -> Unit = {
-            scope.launch {
-                if (scaffoldState.bottomSheetState.isCollapsed) {
-                    scaffoldState.bottomSheetState.expand()
-                } else {
-                    scaffoldState.bottomSheetState.collapse()
-                }
-            }
-        }
-        val radius = (30 * scaffoldState.currentFraction).dp
+
 
         MindYugTheme {
 
             BottomSheetScaffold(
                 modifier = Modifier.fillMaxSize(),
                 scaffoldState = scaffoldState,
-                sheetShape = RoundedCornerShape(topStart = radius, topEnd = radius),
+                sheetShape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
                 sheetContent = {
-                    SheetContent {
-                        SheetExpanded {
-                            PointsScreen()
-                        }
-                        SheetCollapsed(
-                            isCollapsed = scaffoldState.bottomSheetState.isCollapsed,
-                            currentFraction = scaffoldState.currentFraction,
-                            onSheetClick = sheetToggle
-                        ) {
-                            MindYugBottomNavigationBar(navController = navInnerController)
-                        }
-                    }
+                        PointsScreen(
+                            navController = navInnerController,
+                            elevation = if (scaffoldState.bottomSheetState.isCollapsed) {
+                                8.dp
+                            } else {
+                                0.dp
+                            },
+                            isEnabled = scaffoldState.bottomSheetState.isCollapsed,
+                        )
+
                 },
-                sheetPeekHeight = 70.dp,
+                sheetPeekHeight = 60.dp,
             ) {
                 NavHost(
                     navController = navInnerController, startDestination = Screen.Dashboard.route
@@ -370,12 +363,6 @@ class MainActivity : ComponentActivity() {
             }
 
         }
-
-
-//        Scaffold (
-//                bottomBar = {  }
-//                ) {
-//        }
     }
 
 

@@ -1,4 +1,4 @@
-package com.mindyug.app.presentation.home.components
+package com.mindyug.app.common.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

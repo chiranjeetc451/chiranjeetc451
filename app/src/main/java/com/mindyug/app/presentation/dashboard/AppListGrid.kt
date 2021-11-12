@@ -4,5 +4,5 @@ import com.mindyug.app.domain.model.AppStat
 
 data class AppListGrid(
     val isLoading: Boolean = true,
-    val list: MutableList<AppStat> = mutableListOf(AppStat("", 0))
+    val list: MutableList<AppStat>? = null
 )

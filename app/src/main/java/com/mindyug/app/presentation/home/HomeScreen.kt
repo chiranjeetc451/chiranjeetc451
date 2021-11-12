@@ -3,42 +3,50 @@ package com.mindyug.app.presentation.home
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.mindyug.app.R
 import com.mindyug.app.presentation.home.components.MindYugBottomNavigation
 import com.mindyug.app.presentation.home.components.MindYugBottomNavigationItem
-import com.mindyug.app.presentation.home.components.PointKeeper
+import com.mindyug.app.common.components.PointKeeper
 import com.mindyug.app.ui.theme.MindYugTheme
 
 
 @Composable
-fun MindYugBottomNavigationBar(navController: NavController) {
+fun MindYugBottomNavigationBar(
+    navController: NavController,
+    elevation: Dp,
+    isEnabled: Boolean
+) {
     MindYugTheme {
         MindYugBottomNavigation(
             backgroundColor = Color(0xFF0D3F56),
             contentColor = Color.White,
+            elevation = elevation
         ) {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
             val score = "1000"
             BottomNavigationItem(
                 icon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_home),
-                        contentDescription = stringResource(R.string.dashboard)
-                    )
+                    if (isEnabled) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_home),
+                            contentDescription = stringResource(R.string.dashboard),
+                        )
+                    }
                 },
                 selectedContentColor = MaterialTheme.colors.secondary,
                 unselectedContentColor = Color.White,
                 alwaysShowLabel = false,
                 selected = currentRoute == "home/dashboard",
+                enabled = isEnabled,
                 onClick = {
 //                    navController.popBackStack()
                     navController.navigate("home/dashboard") {
@@ -68,16 +76,20 @@ fun MindYugBottomNavigationBar(navController: NavController) {
             })
             BottomNavigationItem(
                 icon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_trophy),
-                        contentDescription = stringResource(id = R.string.rewards)
-                    )
+                    if (isEnabled) {
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_trophy),
+                            contentDescription = stringResource(id = R.string.rewards)
+                        )
+                    }
 //                           Text(text =stringResource(id = item.title) )
                 },
                 selectedContentColor = MaterialTheme.colors.secondary,
                 unselectedContentColor = Color.White,
                 alwaysShowLabel = false,
                 selected = currentRoute == "home/rewards",
+                enabled = isEnabled,
                 onClick = {
                     navController.navigate("home/rewards") {
                         // Pop up to the start destination of the graph to

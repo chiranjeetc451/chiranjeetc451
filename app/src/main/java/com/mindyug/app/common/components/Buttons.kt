@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -46,6 +47,9 @@ fun GradientButton(
     isLoading: Boolean = false,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = ButtonShape,
+    brush1: Brush = horizontalGradientBrush,
+    brush2: Brush = horizontalDisabledGradientBrush,
+
     border: BorderStroke? = null,
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit
@@ -55,11 +59,10 @@ fun GradientButton(
         color = Color.Transparent,
         border = border,
         modifier = modifier
+            .shadow(8.dp)
             .clip(shape)
             .background(
-
-                if (enabled) horizontalGradientBrush else horizontalDisabledGradientBrush
-
+                if (enabled) brush1 else brush2
             )
             .clickable(
                 onClick = onClick,

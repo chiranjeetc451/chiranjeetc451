@@ -66,7 +66,7 @@ fun PointListItem(
         horizontalArrangement = Arrangement.SpaceBetween,
 
         ) {
-        Text(text = getDateAsStringFromDate(pointItem.date), color = Color.White)
+        Text(text = pointItem.date, color = Color.White)
         Text(text = pointItem.points.toString(), color = if(pointItem.points>0){ Color(0xFF2CE07F)} else  { Color.Red })
     }
     Spacer(modifier = Modifier.height(16.dp))
@@ -78,8 +78,8 @@ fun getDateAsStringFromDate(date: Date): String {
     return df.format(date)
 }
 
-@Preview
-@Composable
-fun PointItemPreview() {
-    PointListItem(PointItem(Date(), 90000))
-}
+//@Preview
+//@Composable
+//fun PointItemPreview() {
+//    PointListItem(PointItem(Date(), 90000))
+//}
