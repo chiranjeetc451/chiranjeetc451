@@ -45,7 +45,6 @@ import com.mindyug.app.common.util.getYearFromDate
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.Dashboard
 import com.mindyug.app.presentation.home.RequestPermissionScreen
-import com.mindyug.app.presentation.home.components.SheetContent
 import com.mindyug.app.presentation.introduction.IntroductionScreen
 import com.mindyug.app.presentation.login.*
 import com.mindyug.app.presentation.notifications.NotificationsScreen
@@ -337,15 +336,16 @@ class MainActivity : ComponentActivity() {
                 scaffoldState = scaffoldState,
                 sheetShape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp),
                 sheetContent = {
-                        PointsScreen(
-                            navController = navInnerController,
-                            elevation = if (scaffoldState.bottomSheetState.isCollapsed) {
-                                8.dp
-                            } else {
-                                0.dp
-                            },
-                            isEnabled = scaffoldState.bottomSheetState.isCollapsed,
-                        )
+                    PointsScreen(
+                        navController = navInnerController,
+                        elevation = if (scaffoldState.bottomSheetState.isCollapsed) {
+                            8.dp
+                        } else {
+                            0.dp
+                        },
+                        isEnabled = scaffoldState.bottomSheetState.isCollapsed,
+                        temporaryPoints = getPoints()
+                    )
 
                 },
                 sheetPeekHeight = 60.dp,
@@ -354,7 +354,10 @@ class MainActivity : ComponentActivity() {
                     navController = navInnerController, startDestination = Screen.Dashboard.route
                 ) {
                     composable(route = Screen.Dashboard.route) {
-                        Dashboard(navController = navController)
+                        Dashboard(
+                            navController = navController,
+                            temporaryPoints = getPoints()
+                        )
                     }
                     composable(route = Screen.Rewards.route) {
                         Rewards()
@@ -367,7 +370,12 @@ class MainActivity : ComponentActivity() {
 
 
     fun getPurifiedList(): MutableList<AppStat> {
-        val list = getStatsList()    // return a list of events
+        val cal = java.util.Calendar.getInstance()
+        cal[Calendar.HOUR_OF_DAY] = 0
+        val startTime = cal.timeInMillis
+        val endTime = System.currentTimeMillis()
+
+        val list = getStatsList(startTime, endTime)    // return a list of events
         val list2 = appList()        // return a list of installed apps
         val googlePackages = mutableListOf(
             "com.android.chrome",
@@ -418,15 +426,12 @@ class MainActivity : ComponentActivity() {
     }
 
     @Throws(PackageManager.NameNotFoundException::class)
-    fun getStatsList(): MutableList<AppStat> {
+    fun getStatsList(startTime: Long, endTime: Long): MutableList<AppStat> {
         val usm: UsageStatsManager =
             (this.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager)
 //        val appList = ArrayList<App>()
         val appList: MutableList<AppStat> = mutableListOf()
-        val cal = java.util.Calendar.getInstance()
-        cal[Calendar.HOUR_OF_DAY] = 0
-        val startTime = cal.timeInMillis
-        val endTime = System.currentTimeMillis()
+
 //        val allEvents = ArrayList<UsageEvents.Event>()
         val allEvents: MutableList<UsageEvents.Event> = mutableListOf()
         val usageEvents: UsageEvents = usm.queryEvents(startTime, endTime)
@@ -479,6 +484,62 @@ class MainActivity : ComponentActivity() {
         )
         return mode == AppOpsManager.MODE_ALLOWED
     }
+
+    private fun getPoints(): Long {
+        val endTime = System.currentTimeMillis()
+        val startTime = endTime - 86400000
+
+        val list = getStatsList(startTime, endTime)    // return a list of events
+        val list2 = appList()        // return a list of installed apps
+        val googlePackages = mutableListOf(
+            "com.android.chrome",
+            "com.google.android.youtube",
+            "com.google.android.gm",
+            "com.google.android.apps.maps",
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.apps.photos",
+            "com.google.android.apps.maps",
+            "com.google.android.apps.tachyon",
+            "com.google.android.apps.youtube.music",
+            "com.google.android.apps.docs",
+            "com.google.android.apps.googleassistant",
+            "com.google.android.apps.nbu.files",
+            "com.google.android.apps.messaging",
+            "com.google.android.calendar",
+            "com.google.android.keep",
+        )
+        for (name in googlePackages) {
+            val ai: ApplicationInfo = try {
+                this.packageManager.getApplicationInfo(
+                    name,
+                    PackageManager.GET_META_DATA
+                )
+            } catch (e: Exception) {
+                continue
+            }
+            list2.add(ai)
+        }
+        val purifiedList: MutableList<AppStat> = mutableListOf()
+        for (name in list2) {
+//            Log.d("tag", "package: ${app.name}, time: ${app.time} now111")
+//            Log.d("tag","package: ${app.packageName}")
+            var n: Long = 0
+            for (app in list) {
+                if (app.packageName == name.packageName) {
+                    n += app.foregroundTime
+                }
+            }
+            purifiedList.add(AppStat(name.packageName, n))
+        }
+        for (app in purifiedList) {
+            if (app.foregroundTime.equals(0)) {
+                purifiedList.remove(app)
+            }
+        }
+        val totalTime= purifiedList.sumOf { it.foregroundTime }
+        return 1000 - totalTime/60000
+    }
+
 
 }
 

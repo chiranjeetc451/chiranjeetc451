@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.mindyug.app.domain.model.UserData
@@ -13,10 +14,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import java.lang.Exception
 import javax.inject.Inject
+import javax.inject.Named
 
 class UserDataRepositoryImpl
 @Inject constructor(
-    private val usersList: CollectionReference,
+    private val usersList: FirebaseFirestore,
     private val storageReference: StorageReference
 ) : UserDataRepository {
 
@@ -24,7 +26,7 @@ class UserDataRepositoryImpl
         try {
             emit(Results.Loading<String>())
 
-            usersList.document(FirebaseAuth.getInstance().currentUser?.uid!!).set(userData)
+            usersList.collection("users").document(FirebaseAuth.getInstance().currentUser?.uid!!).set(userData)
             emit(Results.Success<String>(data = "Successful"))
 
         } catch (e: Exception) {
@@ -37,7 +39,7 @@ class UserDataRepositoryImpl
         try {
             emit(Results.Loading<String>())
 
-            usersList.document(uid).set(userData)
+            usersList.collection("users").document(uid).set(userData)
             emit(Results.Success<String>(data = "Successful"))
 
         } catch (e: Exception) {
@@ -51,6 +53,7 @@ class UserDataRepositoryImpl
         try {
             emit(Results.Loading<UserData>())
             val user = usersList
+                .collection("users")
                 .document(uid)
                 .get()
                 .await()
@@ -78,6 +81,7 @@ class UserDataRepositoryImpl
         try {
             emit(Results.Loading<UserData>())
             val user = usersList
+                .collection("users")
                 .document(FirebaseAuth.getInstance().currentUser?.uid!!)
                 .get()
                 .await()

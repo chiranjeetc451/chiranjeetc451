@@ -1,9 +1,12 @@
 package com.mindyug.app.presentation.home.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,6 +16,9 @@ import androidx.compose.ui.layout.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+
+
+
 
 @Composable
 fun RowScope.MindYugBottomNavigationItem(
@@ -43,7 +49,6 @@ fun RowScope.MindYugBottomNavigationItem(
             )
         }
     }
-
 
 
 @Composable

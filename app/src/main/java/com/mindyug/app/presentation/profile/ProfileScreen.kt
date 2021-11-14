@@ -129,7 +129,7 @@ fun ProfileScreen(
 
                 val ab = mutableListOf(PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",-90000), PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",97000), PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",80000))
 
-                PointsList(ab)
+                PointsList(ab, true)
 
 
             }

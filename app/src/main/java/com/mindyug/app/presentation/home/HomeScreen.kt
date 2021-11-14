@@ -22,7 +22,9 @@ import com.mindyug.app.ui.theme.MindYugTheme
 fun MindYugBottomNavigationBar(
     navController: NavController,
     elevation: Dp,
-    isEnabled: Boolean
+    isEnabled: Boolean,
+    points: Long,
+    isLoading: Boolean
 ) {
     MindYugTheme {
         MindYugBottomNavigation(
@@ -32,7 +34,7 @@ fun MindYugBottomNavigationBar(
         ) {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-            val score = "1000"
+            val score = points.toString()
             BottomNavigationItem(
                 icon = {
                     if (isEnabled) {
@@ -71,7 +73,8 @@ fun MindYugBottomNavigationBar(
             MindYugBottomNavigationItem(content = {
                 PointKeeper(
                     color = Color(0xFF002333),
-                    score = score
+                    score = score,
+                    isLoading = isLoading
                 )
             })
             BottomNavigationItem(

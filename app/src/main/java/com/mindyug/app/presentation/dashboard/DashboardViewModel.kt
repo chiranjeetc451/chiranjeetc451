@@ -10,15 +10,12 @@ import com.mindyug.app.R
 import com.mindyug.app.common.ProfilePictureState
 import com.mindyug.app.common.util.getPrimaryKeyDate
 import com.mindyug.app.data.repository.Results
-import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.domain.repository.StatDataRepository
 import com.mindyug.app.domain.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
@@ -73,13 +70,12 @@ constructor(
 
     fun getStatData(date: Date) {
         getAppStatsJob?.cancel()
-        getAppStatsJob = statDataRepository.getStatDataByDate(getPrimaryKeyDate(date)).onEach {
+        getAppStatsJob = statDataRepository.getStatDataByDate(getPrimaryKeyDate(date)).onEach { it2 ->
+            it2.dailyUsedAppStatsList.sortByDescending { it.foregroundTime }
             _appListGrid.value =appListGrid.value.copy(
                 isLoading = false,
-                list = it.dailyUsedAppStatsList
+                list = it2.dailyUsedAppStatsList
             )
-
-
         }.launchIn(viewModelScope)
 
     }

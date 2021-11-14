@@ -3,6 +3,7 @@ package com.mindyug.app.domain.repository
 import android.net.Uri
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.UserData
+import dagger.Provides
 import kotlinx.coroutines.flow.Flow
 
 interface UserDataRepository {

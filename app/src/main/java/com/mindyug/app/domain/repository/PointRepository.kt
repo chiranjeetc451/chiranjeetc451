@@ -6,5 +6,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface PointRepository {
     fun getAllPointsFromUid(uid: String): Flow<Results<List<PointItem>>>
-    fun savePointItem(pointItem: PointItem): Flow<Results<String>>
+    fun savePointItem(pointItem: PointItem, uid: String): Flow<Results<String>>
 }

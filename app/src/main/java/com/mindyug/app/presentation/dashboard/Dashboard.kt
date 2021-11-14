@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -44,6 +45,7 @@ import java.util.*
 fun Dashboard(
     viewModel: DashboardViewModel = hiltViewModel(),
     navController: NavHostController,
+    temporaryPoints: Long
 ) {
     val context = LocalContext.current
     val sharedPref = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
@@ -59,9 +61,13 @@ fun Dashboard(
     val imageUri = viewModel.profilePictureUri.value.uri
 
     Column {
+//        LazyColumn(){
+//
+//        }
         TopBar(
             imageUri = imageUri,
-            navController = navController
+            navController = navController,
+            temporaryPoints = temporaryPoints
         )
         Box(
             Modifier
@@ -115,7 +121,9 @@ fun Dashboard(
 @Composable
 fun TopBar(
     imageUri: Uri?,
-    navController: NavHostController
+    navController: NavHostController,
+    temporaryPoints: Long
+
 ) {
     var showMenu by remember { mutableStateOf(false) }
     TopAppBar(
@@ -214,7 +222,7 @@ fun TopBar(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                TempPointKeeper(points = 453)
+                TempPointKeeper(points = temporaryPoints)
             }
 
 

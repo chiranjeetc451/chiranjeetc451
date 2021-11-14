@@ -13,7 +13,11 @@ import androidx.compose.ui.unit.dp
 import com.mindyug.app.R
 
 @Composable
-fun PointKeeper(color: Color = Color(0xFF002333), score: String) {
+fun PointKeeper(
+    color: Color = Color(0xFF002333),
+    score: String,
+    isLoading: Boolean
+) {
     Surface(
         color = Color(0xFF2CE07F),
         shape = RoundedCornerShape(percent = 50)
@@ -25,10 +29,17 @@ fun PointKeeper(color: Color = Color(0xFF002333), score: String) {
         ) {
             Spacer(modifier = Modifier.width(8.dp))
 
-            Text(
-                text = score,
-                color = color
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 3.dp,
+                )
+            } else {
+                Text(
+                    text = score,
+                    color = color
+                )
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Divider(
                 color = color,
@@ -51,5 +62,5 @@ fun PointKeeper(color: Color = Color(0xFF002333), score: String) {
 @Preview
 @Composable
 fun PointKeeperPreview() {
-    PointKeeper(Color.Black, "5000")
+    PointKeeper(Color.Black, "5000", true)
 }

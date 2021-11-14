@@ -12,13 +12,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.common.MindYugButtonState
+import com.mindyug.app.common.util.validateName
+import com.mindyug.app.common.util.validateNumber
+import com.mindyug.app.common.util.validateUsername
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.Address
 import com.mindyug.app.domain.model.UserData
 import com.mindyug.app.domain.repository.UserDataRepository
-import com.mindyug.app.common.util.validateName
-import com.mindyug.app.common.util.validateNumber
-import com.mindyug.app.common.util.validateUsername
 import com.mindyug.app.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn

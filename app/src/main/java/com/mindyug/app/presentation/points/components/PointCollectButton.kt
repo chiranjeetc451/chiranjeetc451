@@ -22,7 +22,6 @@ fun CollectSection(
 
     ) {
     Surface(
-//        modifier = Modifier.width(110.dp),
         shape = RoundedCornerShape(percent = 50)
     ) {
         Row() {
