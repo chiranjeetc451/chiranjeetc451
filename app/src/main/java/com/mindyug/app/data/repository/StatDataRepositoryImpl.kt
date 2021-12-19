@@ -19,4 +19,8 @@ class StatDataRepositoryImpl(private val dao: StatDataDao) : StatDataRepository 
         dao.setStatData(statData)
     }
 
+    override fun getAllEntries(): Flow<List<StatData>> {
+        return dao.getAllEntries()
+    }
+
 }

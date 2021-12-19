@@ -97,7 +97,7 @@ fun EnterNameScreen(
                 GradientButton(onClick = {
 
                     if (!name.isError && name.text.isNotEmpty()) {
-                        navHostController.navigate(Screen.EnterUsernameScreen.withArgs(verifiedNumber, name.text))
+                        navHostController.navigate(Screen.UploadPhotoScreen.withArgs(verifiedNumber, name.text))
                     } else {
                         if (name.text.isEmpty() || name.text == "") {
                             Toast.makeText(

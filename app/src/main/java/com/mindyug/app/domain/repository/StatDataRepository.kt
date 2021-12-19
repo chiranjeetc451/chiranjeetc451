@@ -12,4 +12,6 @@ interface StatDataRepository {
 
     suspend fun setStatData(statData: StatData)
 
+    fun getAllEntries():Flow<List<StatData>>
+
 }

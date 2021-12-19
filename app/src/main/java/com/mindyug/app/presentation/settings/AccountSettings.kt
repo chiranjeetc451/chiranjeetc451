@@ -49,7 +49,7 @@ fun AccountSettings(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { navHostController.navigate(Screen.SettingsScreen.route) },
+                        onClick = { navHostController.navigateUp() },
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.ArrowBackIos,
@@ -257,7 +257,6 @@ fun AccountSettings(
                                 viewModel.updateUserData(
                                     uid!!,
                                     name.text!!,
-                                    "null",
                                     phoneNumber.text!!,
                                     address.houseNo!!,
                                     address.addressLineOne,

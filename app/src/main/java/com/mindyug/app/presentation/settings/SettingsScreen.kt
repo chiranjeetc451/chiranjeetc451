@@ -148,7 +148,9 @@ fun SettingsScreen(
                         val sharedPref =
                             context.getSharedPreferences("userLoginState", Context.MODE_PRIVATE)
                         sharedPref.edit().clear().apply()
-                        navHostController.navigate(Screen.IntroductionScreen.route)
+                        navHostController.navigate(Screen.IntroductionScreen.route){
+                            popUpTo(Screen.SettingsScreen.route) { inclusive = true}
+                        }
                     }
                 ) {
                     Spacer(modifier = Modifier.width(8.dp))

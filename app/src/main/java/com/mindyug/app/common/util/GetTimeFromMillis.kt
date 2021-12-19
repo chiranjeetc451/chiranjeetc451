@@ -1,4 +1,4 @@
-package com.mindyug.app.presentation.dashboard.util
+package com.mindyug.app.common.util
 
 import java.lang.StringBuilder
 import java.util.concurrent.TimeUnit

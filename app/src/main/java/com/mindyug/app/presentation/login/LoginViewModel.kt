@@ -10,6 +10,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.common.MindYugButtonState
 import com.mindyug.app.common.util.validateName
@@ -20,15 +23,18 @@ import com.mindyug.app.domain.model.Address
 import com.mindyug.app.domain.model.UserData
 import com.mindyug.app.domain.repository.UserDataRepository
 import com.mindyug.app.presentation.util.Screen
+import com.mindyug.app.background.PointCollectWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject
 constructor(
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val workManager: WorkManager
 ) : ViewModel() {
     private val _state = mutableStateOf(UserDataState())
     val state: State<UserDataState> = _state
@@ -118,12 +124,11 @@ constructor(
 
     fun addUser(
         enteredName: String,
-        username: String,
         number: String,
         context: Context,
         navController: NavHostController
     ) {
-        val user = UserData(enteredName, username, number, Address("", "", "", "", "", "", "", ""))
+        val user = UserData(enteredName, number, Address("", "", "", "", "", "", "", ""))
         userDataRepository.setUserData(user).onEach { result ->
             when (result) {
                 is Results.Loading -> {
@@ -142,11 +147,22 @@ constructor(
                         putString("name", enteredName)
                         apply()
                     }
+
+                    val pointPrefs = context.getSharedPreferences("pointSysUtils", MODE_PRIVATE)
+                        ?: return@onEach
+                    with(pointPrefs.edit()) {
+                        putBoolean("collectButtonState", false)
+                        putLong("loginTime", System.currentTimeMillis())
+                        apply()
+                    }
+
                     Toast.makeText(
                         context,
                         "Verification Successful",
                         Toast.LENGTH_SHORT
                     ).show()
+                    pointsReset()
+
                 }
                 is Results.Error -> {
                     _btnNext.value = btnNext.value.copy(
@@ -173,7 +189,7 @@ constructor(
                 }
                 is Results.Success -> {
 //                    return@onEach result.data?.username != null
-                    if (result.data?.username != null) {
+                    if (result.data?.name != null) {
                         navController.navigate(Screen.HomeScreen.route) {
                             popUpTo(Screen.HomeScreen.route)
                         }
@@ -186,15 +202,24 @@ constructor(
                             putString("name", result.data.name)
                             apply()
                         }
+                        val pointPrefs = context.getSharedPreferences("pointSysUtils", MODE_PRIVATE)
+                            ?: return@onEach
+                        with(pointPrefs.edit()) {
+                            putBoolean("collectButtonState", false)
+                            putLong("loginTime", System.currentTimeMillis())
+                            apply()
+                        }
+                        pointsReset()
+
 
                     } else {
                         navController.navigate(Screen.EnterNameScreen.withArgs(phone))
                     }
 
-                    result.data?.let { Log.d("tag", it.username) }
+                    result.data?.let { Log.d("tag", it.name) }
                     Toast.makeText(
                         context,
-                        "Verification ooop ${result.data?.username}",
+                        "Verification ooop ${result.data?.name}",
                         Toast.LENGTH_SHORT
                     ).show()
 
@@ -212,7 +237,20 @@ constructor(
         }.launchIn(viewModelScope)
     }
 
+    fun pointsReset() {
+        val uploadWorkRequest: WorkRequest =
+            OneTimeWorkRequestBuilder<PointCollectWorker>()
+                .setInitialDelay(
+                    24,
+                    TimeUnit.HOURS
+                )
+                .addTag("PointResetWork")
+                .build()
 
+        workManager.cancelAllWorkByTag("PointResetWork")
+
+        workManager.enqueue(uploadWorkRequest)
+    }
 }
 
 

@@ -3,18 +3,14 @@ package com.mindyug.app.data.repository
 import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.mindyug.app.domain.model.UserData
 import com.mindyug.app.domain.repository.UserDataRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
-import java.lang.Exception
 import javax.inject.Inject
-import javax.inject.Named
 
 class UserDataRepositoryImpl
 @Inject constructor(

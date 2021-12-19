@@ -332,7 +332,6 @@ fun AddressScreen(
                                 viewModel.updateUserData(
                                     uid!!,
                                     userName!!,
-                                    "null",
                                     phoneNumber.text!!,
                                     houseNo.text!!,
                                     addressLineOne.text,

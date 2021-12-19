@@ -17,4 +17,8 @@ interface StatDataDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun setStatData(statData: StatData)
+
+    @Query("SELECT * FROM statdata")
+    fun getAllEntries(): Flow<List<StatData>>
+
 }

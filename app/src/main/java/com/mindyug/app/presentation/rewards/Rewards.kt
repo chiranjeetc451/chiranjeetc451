@@ -2,11 +2,11 @@ package com.mindyug.app.presentation.rewards
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -32,16 +32,28 @@ import kotlinx.coroutines.launch
 @ExperimentalPagerApi
 @Composable
 fun Rewards() {
+    val state = rememberScrollState()
     Scaffold {
-        Column {
+        Column(
+        ) {
             val pagerState = rememberPagerState(pageCount = 2)
-            Tabs(pagerState = pagerState)
-            Spacer(modifier = Modifier.height(8.dp))
-            TabsContent(pagerState = pagerState)
-        }
-    }
 
+
+            Column(
+                modifier = Modifier.verticalScroll(
+                    state
+                )
+            ) {
+                Tabs(pagerState = pagerState)
+                TabsContent(pagerState = pagerState)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+
+    }
 }
+
 
 @Composable
 fun MegaRewardsContent() {
@@ -113,7 +125,7 @@ fun TabsContent(pagerState: PagerState) {
 
     HorizontalPager(state = pagerState) { page ->
         when (page) {
-            0 -> RewardsContent(state)
+            0 -> RewardsContent()
             1 -> MegaRewardsContent()
         }
     }
@@ -121,11 +133,11 @@ fun TabsContent(pagerState: PagerState) {
 }
 
 @Composable
-fun RewardsContent(state: ScrollState) {
+fun RewardsContent() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(state)
+//            .verticalScroll(state)
     ) {
         Row(
             modifier = Modifier
@@ -412,7 +424,7 @@ fun RewardsContent(state: ScrollState) {
                     .background(
                         Color.White
                     )
-                    .clickable {  },
+                    .clickable { },
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start
             ) {
@@ -451,6 +463,6 @@ fun RewardsContent(state: ScrollState) {
 @Composable
 fun Content() {
     val state = rememberScrollState()
-    RewardsContent(state)
+    RewardsContent()
 }
 

@@ -21,7 +21,7 @@ import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
 import com.mindyug.app.R
 import com.mindyug.app.domain.model.AppStat
-import com.mindyug.app.presentation.dashboard.util.getDurationBreakdown
+import com.mindyug.app.common.util.getDurationBreakdown
 
 @Composable
 fun MindYugStatCard(
@@ -55,8 +55,7 @@ fun MindYugStatCard(
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .height(150.dp)
-                .width(100.dp),
+                .size(140.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

@@ -12,10 +12,12 @@ import android.icu.util.Calendar
 import android.os.Bundle
 import android.os.Process
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,10 +40,7 @@ import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.mindyug.app.common.StatisticsViewModel
-import com.mindyug.app.common.util.getDateFromDate
-import com.mindyug.app.common.util.getMonthFromDate
-import com.mindyug.app.common.util.getPrimaryKeyDate
-import com.mindyug.app.common.util.getYearFromDate
+import com.mindyug.app.common.util.*
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.Dashboard
 import com.mindyug.app.presentation.home.RequestPermissionScreen
@@ -85,7 +84,6 @@ class MainActivity : ComponentActivity() {
             getPrimaryKeyDate(Date())
         )
 
-
         setContent {
             Navigation()
         }
@@ -125,11 +123,6 @@ class MainActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     viewModel.getUsername(applicationContext, navController, phone)
 
-//                    Toast.makeText(
-//                        applicationContext,
-//                        "Verification Successful $username",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
 
                 } else {
                     Toast.makeText(applicationContext, "Wrong Otp", Toast.LENGTH_SHORT).show()
@@ -236,47 +229,25 @@ class MainActivity : ComponentActivity() {
                     EnterNameScreen(navHostController = navController, verifiedNumber = it)
                 }
             }
+
             composable(
-                route = Screen.EnterUsernameScreen.route + "/{number}/{name}",
-                arguments = listOf(navArgument("number") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                    nullable = false
-                }, navArgument("name") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                    nullable = false
-                })
-            ) { entry ->
-                entry.arguments?.getString("number")?.let {
-                    EnterUsernameScreen(
-                        navHostController = navController,
-                        number = it,
-                        name = entry.arguments?.getString("name")!!
-                    )
-                }
-            }
-            composable(
-                route = Screen.UploadPhotoScreen.route + "/{number}/{name}/{username}",
-                arguments = listOf(navArgument("number") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                    nullable = false
-                }, navArgument("name") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                    nullable = false
-                }, navArgument("username") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                    nullable = false
-                })
+                route = Screen.UploadPhotoScreen.route + "/{number}/{name}",
+                arguments = listOf(
+                    navArgument("number") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                        nullable = false
+                    },
+                    navArgument("name") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                        nullable = false
+                    })
             ) { entry ->
                 UploadPhotoScreen(
                     navHostController = navController,
                     number = entry.arguments?.getString("number")!!,
                     name = entry.arguments?.getString("name")!!,
-                    username = entry.arguments?.getString("username")!!,
                 )
             }
             composable(route = Screen.HomeScreen.route) {
@@ -323,11 +294,9 @@ class MainActivity : ComponentActivity() {
     fun HomeScreen(navController: NavHostController) {
         val navInnerController = rememberNavController()
 
-
         val scaffoldState = rememberBottomSheetScaffoldState(
             bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
         )
-
 
         MindYugTheme {
 
@@ -356,7 +325,8 @@ class MainActivity : ComponentActivity() {
                     composable(route = Screen.Dashboard.route) {
                         Dashboard(
                             navController = navController,
-                            temporaryPoints = getPoints()
+                            temporaryPoints = getPoints(),
+                            list = getPurifiedList()
                         )
                     }
                     composable(route = Screen.Rewards.route) {
@@ -368,14 +338,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     fun getPurifiedList(): MutableList<AppStat> {
-        val cal = java.util.Calendar.getInstance()
-        cal[Calendar.HOUR_OF_DAY] = 0
-        val startTime = cal.timeInMillis
+//        val cal = java.util.Calendar.getInstance()
+//        cal[Calendar.HOUR_OF_DAY] = 0
+//        val startTime = cal.timeInMillis
+
+        val sharedPref = applicationContext.getSharedPreferences("pointSysUtils", MODE_PRIVATE)
+        val loginTime = sharedPref.getLong("loginTime", 0)
+
+
         val endTime = System.currentTimeMillis()
 
-        val list = getStatsList(startTime, endTime)    // return a list of events
+        var diff = endTime - loginTime
+
+        if (diff < 0) {
+            diff *= (-1)
+        }
+
+        val list = getStatsList(endTime - diff, endTime)    // return a list of events
         val list2 = appList()        // return a list of installed apps
         val googlePackages = mutableListOf(
             "com.android.chrome",
@@ -422,7 +402,13 @@ class MainActivity : ComponentActivity() {
                 purifiedList.remove(app)
             }
         }
+
+//        for(app in purifiedList){
+//            Log.d("tag",app.packageName)
+//        }
         return purifiedList
+
+
     }
 
     @Throws(PackageManager.NameNotFoundException::class)
@@ -465,7 +451,6 @@ class MainActivity : ComponentActivity() {
         return appList
     }
 
-
     @SuppressLint("QueryPermissionsNeeded")
     fun appList(): MutableList<ApplicationInfo> {
 
@@ -486,16 +471,24 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun getPoints(): Long {
-        val endTime = System.currentTimeMillis()
-        val startTime = endTime - 86400000
+        val sharedPref = applicationContext.getSharedPreferences("pointSysUtils", MODE_PRIVATE)
+        val loginTime = sharedPref.getLong("loginTime", 0)
 
-        val list = getStatsList(startTime, endTime)    // return a list of events
+
+        val endTime = System.currentTimeMillis()
+
+        var diff = endTime - loginTime
+
+        if (diff < 0) {
+            diff *= (-1)
+        }
+
+        val list = getStatsList(endTime - diff, endTime)    // return a list of events
         val list2 = appList()        // return a list of installed apps
         val googlePackages = mutableListOf(
             "com.android.chrome",
             "com.google.android.youtube",
             "com.google.android.gm",
-            "com.google.android.apps.maps",
             "com.google.android.googlequicksearchbox",
             "com.google.android.apps.photos",
             "com.google.android.apps.maps",
@@ -507,7 +500,7 @@ class MainActivity : ComponentActivity() {
             "com.google.android.apps.messaging",
             "com.google.android.calendar",
             "com.google.android.keep",
-        )
+        ) //google system packages
         for (name in googlePackages) {
             val ai: ApplicationInfo = try {
                 this.packageManager.getApplicationInfo(
@@ -536,10 +529,9 @@ class MainActivity : ComponentActivity() {
                 purifiedList.remove(app)
             }
         }
-        val totalTime= purifiedList.sumOf { it.foregroundTime }
-        return 1000 - totalTime/60000
+        val totalTime = purifiedList.sumOf { it.foregroundTime }
+        return 1000 - totalTime / 60000
     }
-
 
 }
 

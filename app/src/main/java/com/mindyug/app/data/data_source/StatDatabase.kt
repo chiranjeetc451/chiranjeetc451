@@ -8,12 +8,13 @@ import com.mindyug.app.domain.model.StatData
 
 @Database(
     entities = [StatData::class],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class StatDatabase : RoomDatabase() {
     abstract val statDao: StatDataDao
-    companion object{
+    companion object {
         const val DATABASE_NAME = "stats_db"
     }
 }

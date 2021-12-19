@@ -1,13 +1,9 @@
 package com.mindyug.app.presentation.profile
 
 import android.content.Context
-import android.net.Uri
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBackIos
@@ -25,18 +21,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
-import com.google.api.ResourceDescriptor
 import com.mindyug.app.R
-import com.mindyug.app.common.components.PointsList
-import com.mindyug.app.common.components.getDateAsStringFromDate
-import com.mindyug.app.domain.model.PointItem
-import com.mindyug.app.presentation.dashboard.DashboardViewModel
+import com.mindyug.app.presentation.profile.components.StatsList
 import com.mindyug.app.presentation.util.Screen
 import com.mindyug.app.ui.theme.MindYugTheme
-import java.util.*
 
 @Composable
 fun ProfileScreen(
@@ -53,7 +43,7 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { navHostController.navigate(Screen.HomeScreen.route) },
+                        onClick = { navHostController.navigateUp() },
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.ArrowBackIos,
@@ -127,10 +117,11 @@ fun ProfileScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val ab = mutableListOf(PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",-90000), PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",97000), PointItem(getDateAsStringFromDate(Date()),"ss","sss","sss",80000))
 
-                PointsList(ab, true)
-
+                StatsList(
+                    list = viewModel.listState.value.list,
+                    isLoading = viewModel.listState.value.isLoading
+                )
 
             }
         }

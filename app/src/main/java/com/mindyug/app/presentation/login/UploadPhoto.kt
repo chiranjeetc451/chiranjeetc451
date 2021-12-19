@@ -39,7 +39,6 @@ fun UploadPhotoScreen(
     navHostController: NavHostController,
     number: String,
     name: String,
-    username: String,
 ) {
 
     var value by remember { mutableStateOf("") }
@@ -139,7 +138,6 @@ fun UploadPhotoScreen(
                         imageUri?.let { it1 -> viewModel.uploadProfilePic(it1) }
                         viewModel.addUser(
                             enteredName = name,
-                            username = username,
                             number = number,
                             context = context,
                             navController = navHostController

@@ -13,9 +13,4 @@ class Converters {
     @TypeConverter
     fun jsonToList(value: String) = Gson().fromJson(value, Array<AppStat>::class.java).toList()
 
-    @TypeConverter
-    fun toDate(dateLong: Long?) = dateLong?.let { Date(it) }
-
-    @TypeConverter
-    fun fromDate(date: Date?) = date?.time
 }

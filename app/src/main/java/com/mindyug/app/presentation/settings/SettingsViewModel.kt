@@ -365,7 +365,6 @@ constructor(
     fun updateUserData(
         uid: String,
         enteredName: String,
-        username: String,
         number: String,
         houseNo: String?,
         addressLineOne: String,
@@ -379,7 +378,6 @@ constructor(
     ) {
         val user = UserData(
             enteredName,
-            username,
             number,
             Address(
                 houseNo,
@@ -406,7 +404,7 @@ constructor(
                         isEnabled = true,
                         isLoading = false,
                     )
-                    navController.navigate(Screen.SettingsScreen.route)
+                    navController.navigateUp()
 
                 }
                 is Results.Error -> {

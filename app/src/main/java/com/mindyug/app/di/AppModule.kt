@@ -1,7 +1,9 @@
 package com.mindyug.app.di
 
 import android.app.Application
+import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,6 +20,7 @@ import com.mindyug.app.domain.repository.UserDataRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Named
 import javax.inject.Singleton
@@ -33,12 +36,20 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideWorkManager(
+        @ApplicationContext context: Context
+    ) = WorkManager.getInstance(context)
+
+    @Provides
+    @Singleton
     fun provideUserDataRepository(
         usersList: FirebaseFirestore,
         storageReference: StorageReference
     ): UserDataRepository {
         return UserDataRepositoryImpl(usersList, storageReference)
     }
+
+
 
     @Provides
     @Singleton
@@ -56,7 +67,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesNoteDatabase(app: Application): StatDatabase {
+    fun providesStatDatabase(app: Application): StatDatabase {
         return Room.databaseBuilder(
             app,
             StatDatabase::class.java,

@@ -4,5 +4,6 @@ import com.mindyug.app.domain.model.AppStat
 
 data class AppListGrid(
     val isLoading: Boolean = true,
-    val list: MutableList<AppStat>? = null
-)
+    val list: MutableList<AppStat>? = null,
+    val totalTime: Long = 0,
+    )

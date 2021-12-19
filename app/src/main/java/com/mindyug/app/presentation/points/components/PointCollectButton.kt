@@ -19,6 +19,7 @@ import com.mindyug.app.common.components.GradientButton
 fun CollectSection(
     points: Long,
     onClick: () -> Unit,
+    enabled:Boolean
 
     ) {
     Surface(
@@ -45,7 +46,7 @@ fun CollectSection(
 
 //                    .height(30.dp)
             ) {
-                GradientButton(onClick = onClick,brush1 =gradientBrush) {
+                GradientButton(onClick = onClick,brush1 =gradientBrushEnabled, brush2 = gradientBrushDisabled, enabled = enabled) {
                     Text(text = "Collect", color = Color.White, )
 
                 }
@@ -58,9 +59,16 @@ fun CollectSection(
 
 }
 
-val gradientBrush = Brush.verticalGradient(
+val gradientBrushEnabled = Brush.verticalGradient(
     colors = listOf(
         Color(0xff1C6586),
         Color(0xff6F67C6),
+    )
+)
+
+val gradientBrushDisabled = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFF507B8F),
+        Color(0xFF9893CF),
     )
 )

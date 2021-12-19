@@ -14,7 +14,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.mindyug.app.R
 import com.mindyug.app.presentation.home.components.MindYugBottomNavigation
 import com.mindyug.app.presentation.home.components.MindYugBottomNavigationItem
-import com.mindyug.app.common.components.PointKeeper
+import com.mindyug.app.presentation.home.components.PointKeeper
 import com.mindyug.app.ui.theme.MindYugTheme
 
 

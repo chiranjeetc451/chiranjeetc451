@@ -3,6 +3,7 @@ package com.mindyug.app.presentation.dashboard
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,7 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -31,12 +32,17 @@ import androidx.navigation.NavHostController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mindyug.app.R
+import com.mindyug.app.common.util.getDurationBreakdown
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.components.AnimatedCircle
+import com.mindyug.app.presentation.dashboard.components.ColouredSection
 import com.mindyug.app.presentation.dashboard.components.MindYugStatCard
 import com.mindyug.app.presentation.dashboard.components.TempPointKeeper
 import com.mindyug.app.presentation.util.Screen
+import kotlinx.coroutines.delay
 import java.util.*
 
 @ExperimentalCoilApi
@@ -45,7 +51,8 @@ import java.util.*
 fun Dashboard(
     viewModel: DashboardViewModel = hiltViewModel(),
     navController: NavHostController,
-    temporaryPoints: Long
+    temporaryPoints: Long,
+    list: MutableList<AppStat>
 ) {
     val context = LocalContext.current
     val sharedPref = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
@@ -60,58 +67,192 @@ fun Dashboard(
 
     val imageUri = viewModel.profilePictureUri.value.uri
 
-    Column {
-//        LazyColumn(){
-//
-//        }
-        TopBar(
-            imageUri = imageUri,
-            navController = navController,
-            temporaryPoints = temporaryPoints
-        )
-        Box(
-            Modifier
-                .padding(16.dp)
+
+    SwipeRefresh(
+        state = viewModel.refreshState.value, onRefresh = {
+            viewModel.delayFun()
+            viewModel.getProfilePictureUri(uid!!)
+            viewModel.getStatData(Date())
+        }
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize(),
         ) {
-            val abc = listOf(0.1f, 0.1f, 0.3f, 0.15f, 0.05f, 0.3f)
-            AnimatedCircle(
-                proportions = abc,
-                modifier = Modifier
-                    .height(300.dp)
-                    .fillMaxWidth()
+            item {
+                TopBar(
+                    imageUri = imageUri,
+                    navController = navController,
+                    temporaryPoints = temporaryPoints
+                )
+            }
+            item {
+                val abc = mutableListOf<AppStat>(
+                    AppStat("com.whatsapp", 778),
+                    AppStat("com.whatsapp", 778),
+                    AppStat("com.whatsapp", 778),
+                    AppStat("com.whatsapp", 778),
+                    AppStat("com.whatsapp", 778),
+                    AppStat("com.whatsapp", 778)
+                )
+
+                Graph(totalTimeInMillis = 200000, list = abc, context = context)
+            }
+
+            if (!listState.isLoading) {
+                list.sortByDescending { it.foregroundTime }
+
+                list.distinctBy { it.packageName }
+                for (app in list){
+                    Log.d("tag", app.packageName)
+                }
+                items(list.windowed(2, 2, true)) { sublist ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+//                    .padding(8.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            sublist.forEach { item ->
+                                MindYugStatCard(
+                                    context,
+                                    item
+                                )
+                            }
+
+
+//                AppStatGridList(list, context)
+
+                        }
+                    }
+                }
+            } else {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(30.dp),
+                            strokeWidth = 3.dp,
+
+                            color = Color.White
+                        )
+                    }
+                }
+
+            }
+        }
+    }
+
+
+}
+
+
+@Composable
+fun Graph(
+    totalTimeInMillis: Long,
+    list: MutableList<AppStat>,
+    context: Context
+
+) {
+//    var time = totalTimeInMillis
+//    val fiveList = mutableListOf<AppStat>()
+//
+//    for (i in 0..4) {
+//        fiveList.add(list[i])
+//    }
+//
+//    list.removeAt(0)
+//    list.removeAt(1)
+//    list.removeAt(2)
+//    list.removeAt(3)
+//    list.removeAt(4)
+
+//    LaunchedEffect(Unit) {
+//        for (app in fiveList) {
+//            Log.d("taggedabcc", app.foregroundTime.toString())
+//        }
+//    }
+//
+//    val lastElement = AppStat("Others", list.sumOf { it.foregroundTime })
+//    fiveList.add(lastElement)
+//
+//
+//    val abc = mutableListOf<Float>()
+//
+//    fiveList.forEach() {
+//        abc.add(
+//            if (it.foregroundTime.toFloat().equals(0f)) {
+//                0f
+//            } else {
+//                it.foregroundTime.toFloat() / totalTimeInMillis
+//            }
+//        )
+//    }
+
+
+    Box(
+        Modifier
+            .padding(16.dp)
+    ) {
+//        val bcd = mutableListOf(
+//            0f,
+//            0f,
+//            0f,
+//            0f,
+//            0f,
+//            1f
+//        )
+        AnimatedCircle(
+            proportions = mutableListOf(
+                0.2f,
+                0.3f,
+                0.2f,
+                0.1f,
+                0.1f,
+                01f
+            ),
+//            if (
+//                abc[0].equals(0f) &&
+//                abc[1].equals(0f) &&
+//                abc[2].equals(0f) &&
+//                abc[3].equals(0f) &&
+//                abc[4].equals(0f) &&
+//                abc[5].equals(0f)
+//            ) {
+//                bcd
+//            } else {
+//                bcd
+//            },
+            modifier = Modifier
+                .height(300.dp)
+                .fillMaxWidth()
+        )
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            ColouredSection(context, list)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Total Time:",
+                style = MaterialTheme.typography.caption,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
-
-            Column(modifier = Modifier.align(Alignment.Center)) {
-                Text(
-                    text = "Total Time:",
-                    style = MaterialTheme.typography.body2,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-                Text(
-                    text = "3 Hours",
-                    style = MaterialTheme.typography.body2,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            }
+            Text(
+                text = getDurationBreakdown(totalTimeInMillis)!!,
+                style = MaterialTheme.typography.h5,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
-
-
-        if (!listState.isLoading) {
-            AppStatGridList(listState.list!!, context)
-        } else {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(30.dp),
-                    strokeWidth = 3.dp,
-
-                    color = Color.White
-                )
-            }
-        }
-
     }
 
 
@@ -271,7 +412,7 @@ fun TopBar(
 fun AppStatGridList(list: MutableList<AppStat>, context: Context) {
     LazyVerticalGrid(
         cells = GridCells.Fixed(2),
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 72.dp),
     ) {
         items(list.size) {
             MindYugStatCard(
@@ -279,9 +420,11 @@ fun AppStatGridList(list: MutableList<AppStat>, context: Context) {
                 list[it]
             )
         }
+
     }
 
 }
+
 
 
 
