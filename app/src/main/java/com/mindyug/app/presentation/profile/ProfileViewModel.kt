@@ -6,23 +6,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mindyug.app.R
-import com.mindyug.app.domain.repository.UserDataRepository
 import com.mindyug.app.common.ProfilePictureState
-import com.mindyug.app.common.util.getPrimaryKeyDate
+import com.mindyug.app.data.preferences.UserLoginState
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.repository.StatDataRepository
+import com.mindyug.app.domain.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.inject.Named
 
 @HiltViewModel
 class ProfileViewModel @Inject
 constructor(
     private val userDataRepository: UserDataRepository,
-    private val statDataRepository: StatDataRepository
+    private val statDataRepository: StatDataRepository,
+    private val userPreferences: UserLoginState
 ) : ViewModel() {
 
     private val _profilePictureUri = mutableStateOf(
@@ -36,10 +38,33 @@ constructor(
     )
     val listState: State<StatDataList> = _listState
 
+    private val _name = mutableStateOf("")
+    val name: State<String> = _name
+
     private var getAppStatsJob: Job? = null
 
     init {
         getAllEntries()
+        loadProfile()
+        loadName()
+
+    }
+
+    private fun loadName() {
+        viewModelScope.launch {
+            userPreferences.name.collect {
+                _name.value = it
+            }
+
+        }
+    }
+
+    private fun loadProfile() {
+        viewModelScope.launch {
+            userPreferences.uid.collect {
+                getProfilePictureUri(it)
+            }
+        }
     }
 
 

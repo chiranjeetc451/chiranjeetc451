@@ -1,5 +1,7 @@
 package com.mindyug.app.presentation.login
 
+import android.app.AlarmManager
+import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
@@ -30,6 +32,7 @@ import com.mindyug.app.R
 import com.mindyug.app.common.components.GradientButton
 import com.mindyug.app.ui.theme.MindYugTheme
 import com.mindyug.app.ui.theme.Typography
+import java.util.*
 
 
 @ExperimentalCoilApi
@@ -41,6 +44,9 @@ fun UploadPhotoScreen(
     name: String,
 ) {
 
+
+
+
     var value by remember { mutableStateOf("") }
 
     var imageUri by remember {
@@ -51,6 +57,8 @@ fun UploadPhotoScreen(
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     val btnNext = viewModel.btnNext.value
+
+
 
 
     val launcher = rememberLauncherForActivityResult(

@@ -1,7 +1,8 @@
 package com.mindyug.app.presentation.dashboard
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
+import android.icu.util.Calendar
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -33,18 +34,32 @@ import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
 import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mindyug.app.R
 import com.mindyug.app.common.util.getDurationBreakdown
+import com.mindyug.app.common.util.monthFromDateInString
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.components.AnimatedCircle
 import com.mindyug.app.presentation.dashboard.components.ColouredSection
 import com.mindyug.app.presentation.dashboard.components.MindYugStatCard
 import com.mindyug.app.presentation.dashboard.components.TempPointKeeper
 import com.mindyug.app.presentation.util.Screen
-import kotlinx.coroutines.delay
-import java.util.*
+import androidx.core.content.ContextCompat.startActivity
 
+import android.content.Context.POWER_SERVICE
+
+import androidx.core.content.ContextCompat.getSystemService
+
+import android.os.PowerManager
+
+import android.content.Intent
+
+import android.os.Build
+import android.provider.Settings
+import androidx.core.content.ContextCompat
+import com.mindyug.app.common.components.GradientButton
+
+
+@SuppressLint("BatteryLife")
 @ExperimentalCoilApi
 @ExperimentalFoundationApi
 @Composable
@@ -52,102 +67,155 @@ fun Dashboard(
     viewModel: DashboardViewModel = hiltViewModel(),
     navController: NavHostController,
     temporaryPoints: Long,
-    list: MutableList<AppStat>
 ) {
     val context = LocalContext.current
-    val sharedPref = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
-    val uid = sharedPref.getString("uid", null)
+    val pm = context.getSystemService(POWER_SERVICE) as PowerManager?
+    val packageName: String = "com.mindyug.app"
 
-    val listState = viewModel.appListGrid.value
+    val permissionRequestState by viewModel.loadPermissionRequestState()
+        .collectAsState(initial = false)
+
 
     LaunchedEffect(Unit) {
-        viewModel.getProfilePictureUri(uid!!)
-        viewModel.getStatData(Date())
+        if (!permissionRequestState) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val intent = Intent()
+                if (!pm!!.isIgnoringBatteryOptimizations(packageName)) {
+                    intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                    intent.data = Uri.parse("package:$packageName")
+                    context.startActivity(intent)
+                }
+            }
+            viewModel.togglePermissionState()
+        }
     }
+
+    val cal = Calendar.getInstance()
+
+    val listState = viewModel.appListGrid.value
 
     val imageUri = viewModel.profilePictureUri.value.uri
 
 
-    SwipeRefresh(
-        state = viewModel.refreshState.value, onRefresh = {
-            viewModel.delayFun()
-            viewModel.getProfilePictureUri(uid!!)
-            viewModel.getStatData(Date())
-        }
-    ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize(),
+    Scaffold {
+
+        SwipeRefresh(
+            state = viewModel.refreshState.value, onRefresh = {
+                viewModel.delayFun()
+                viewModel.getStatData(
+                    "${cal.get(Calendar.DATE).toString()} ${monthFromDateInString()}, ${
+                        cal.get(
+                            Calendar.YEAR
+                        ).toString()
+                    }"
+                )
+            }
         ) {
-            item {
-                TopBar(
-                    imageUri = imageUri,
-                    navController = navController,
-                    temporaryPoints = temporaryPoints
-                )
-            }
-            item {
-                val abc = mutableListOf<AppStat>(
-                    AppStat("com.whatsapp", 778),
-                    AppStat("com.whatsapp", 778),
-                    AppStat("com.whatsapp", 778),
-                    AppStat("com.whatsapp", 778),
-                    AppStat("com.whatsapp", 778),
-                    AppStat("com.whatsapp", 778)
-                )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+            ) {
+                item {
+                    if (!pm!!.isIgnoringBatteryOptimizations(packageName)) {
+                        Snackbar(
+                            action = {
+                                GradientButton(onClick = {
+                                    val intent = Intent()
+                                    intent.action =
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    intent.data = Uri.parse("package:$packageName")
+                                    context.startActivity(intent)
+                                }) {
+                                    Text("Request Settings!")
 
-                Graph(totalTimeInMillis = 200000, list = abc, context = context)
-            }
-
-            if (!listState.isLoading) {
-                list.sortByDescending { it.foregroundTime }
-
-                list.distinctBy { it.packageName }
-                for (app in list){
-                    Log.d("tag", app.packageName)
+                                }
+                            },
+                            modifier = Modifier.padding(8.dp),
+                            backgroundColor = Color(0xFF032B3E)
+                        ) { Text(text = "Please allow MindYug to run in background!") }
+                    }
                 }
-                items(list.windowed(2, 2, true)) { sublist ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+
+                item {
+                    TopBar(
+                        imageUri = imageUri,
+                        navController = navController,
+                        temporaryPoints = temporaryPoints
+                    )
+                }
+
+//            item {
+//                val abc = mutableListOf<AppStat>(
+//                    AppStat("com.whatsapp", 778),
+//                    AppStat("com.whatsapp", 778),
+//                    AppStat("com.whatsapp", 778),
+//                    AppStat("com.whatsapp", 778),
+//                    AppStat("com.whatsapp", 778),
+//                    AppStat("com.whatsapp", 778)
+//                )
+//
+//                Graph(totalTimeInMillis = 200000, list = abc, context = context)
+//            }
+
+                if (!listState.isLoading) {
+                    listState.list?.sortByDescending { it.foregroundTime }
+//                    list.sortByDescending { it.foregroundTime }
+
+                    listState.list?.distinctBy { it.packageName }
+//                    for (app in list) {
+//                        Log.d("tag", app.packageName)
+//                    }
+                    val ab = listState.list!!
+                    items(ab.windowed(2, 2, true)) { sublist ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth(),
 //                    .padding(8.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            sublist.forEach { item ->
-                                MindYugStatCard(
-                                    context,
-                                    item
-                                )
-                            }
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                sublist.forEach { item ->
+                                    MindYugStatCard(
+                                        context,
+                                        item
+                                    )
+                                }
 
 
 //                AppStatGridList(list, context)
 
+                            }
                         }
                     }
-                }
-            } else {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(30.dp),
-                            strokeWidth = 3.dp,
+                } else {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(30.dp),
+                                strokeWidth = 3.dp,
 
-                            color = Color.White
-                        )
+                                color = Color.White
+                            )
+                        }
                     }
+
+
                 }
 
+                item {
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
             }
         }
+
+
     }
 
 

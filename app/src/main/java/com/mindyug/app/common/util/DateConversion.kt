@@ -27,3 +27,9 @@ fun getPrimaryKeyDate(date: Date): String{
     val df: DateFormat = SimpleDateFormat(pattern)
     return df.format(date)
 }
+
+fun monthFromDateInString(): String? {
+    val pattern = "MMM"
+    val df: DateFormat = SimpleDateFormat(pattern)
+    return df.format(Calendar.getInstance().time)
+}

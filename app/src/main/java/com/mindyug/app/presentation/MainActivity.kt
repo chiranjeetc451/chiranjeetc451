@@ -12,12 +12,10 @@ import android.icu.util.Calendar
 import android.os.Bundle
 import android.os.Process
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -40,7 +39,9 @@ import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.mindyug.app.common.StatisticsViewModel
-import com.mindyug.app.common.util.*
+import com.mindyug.app.common.util.monthFromDateInString
+import com.mindyug.app.data.preferences.SharedPrefs.Companion.IS_USER_LOGGED_IN
+import com.mindyug.app.data.preferences.SharedPrefs.Companion.LOGIN_STATE
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.presentation.dashboard.Dashboard
 import com.mindyug.app.presentation.home.RequestPermissionScreen
@@ -56,11 +57,17 @@ import com.mindyug.app.presentation.settings.SettingsScreen
 import com.mindyug.app.presentation.util.Screen
 import com.mindyug.app.ui.theme.MindYugTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     private val viewModel: LoginViewModel by viewModels()
     private val statViewModel: StatisticsViewModel by viewModels()
     var date: Date = Date()
@@ -76,13 +83,30 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        statViewModel.loadStatData(
-            getPurifiedList(),
-            getDateFromDate(Date()),
-            getMonthFromDate(Date()),
-            getYearFromDate(Date()),
-            getPrimaryKeyDate(Date())
-        )
+
+        val cal = java.util.Calendar.getInstance()
+        cal[Calendar.HOUR_OF_DAY] = 0
+        cal[Calendar.MINUTE] = 0
+        cal[Calendar.SECOND] = 0
+        val startTime = cal.timeInMillis
+
+        val endTime = System.currentTimeMillis()
+
+        lifecycleScope.launchWhenCreated {
+            getUsageEvents(startTime, endTime).collect {
+                statViewModel.loadStatData(
+                    getPurifiedList(it),
+                    cal.get(Calendar.DATE).toString(),
+                    cal.get(Calendar.MONTH).toString(),
+                    cal.get(Calendar.YEAR).toString(),
+                    "${cal.get(Calendar.DATE).toString()} ${monthFromDateInString()}, ${
+                        cal.get(
+                            Calendar.YEAR
+                        ).toString()
+                    }"
+                )
+            }
+        }
 
         setContent {
             Navigation()
@@ -122,8 +146,6 @@ class MainActivity : ComponentActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     viewModel.getUsername(applicationContext, navController, phone)
-
-
                 } else {
                     Toast.makeText(applicationContext, "Wrong Otp", Toast.LENGTH_SHORT).show()
                 }
@@ -174,11 +196,12 @@ class MainActivity : ComponentActivity() {
         val context = LocalContext.current
         val navController = rememberNavController()
         NavHost(
-            navController = navController, startDestination = if (getUserLoggedInState(context)) {
+            navController = navController, startDestination = if (
+                getUserLoggedInState(context)
+            ) {
                 Screen.HomeScreen.route
             } else {
                 Screen.IntroductionScreen.route
-
             }
         ) {
             composable(
@@ -282,8 +305,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun getUserLoggedInState(context: Context): Boolean {
-        val sharedPref = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
-        return sharedPref.getBoolean("isUserLoggedIn", false)
+        val sharedPref = context.getSharedPreferences(LOGIN_STATE, MODE_PRIVATE)
+        return sharedPref.getBoolean(IS_USER_LOGGED_IN, false)
     }
 
     @ExperimentalMaterialApi
@@ -299,7 +322,6 @@ class MainActivity : ComponentActivity() {
         )
 
         MindYugTheme {
-
             BottomSheetScaffold(
                 modifier = Modifier.fillMaxSize(),
                 scaffoldState = scaffoldState,
@@ -313,7 +335,6 @@ class MainActivity : ComponentActivity() {
                             0.dp
                         },
                         isEnabled = scaffoldState.bottomSheetState.isCollapsed,
-                        temporaryPoints = getPoints()
                     )
 
                 },
@@ -325,8 +346,7 @@ class MainActivity : ComponentActivity() {
                     composable(route = Screen.Dashboard.route) {
                         Dashboard(
                             navController = navController,
-                            temporaryPoints = getPoints(),
-                            list = getPurifiedList()
+                            temporaryPoints = statViewModel.points.value,
                         )
                     }
                     composable(route = Screen.Rewards.route) {
@@ -338,25 +358,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun getPurifiedList(): MutableList<AppStat> {
-//        val cal = java.util.Calendar.getInstance()
-//        cal[Calendar.HOUR_OF_DAY] = 0
-//        val startTime = cal.timeInMillis
+    private fun getPurifiedList(usageEvents: UsageEvents): MutableList<AppStat> {
 
-        val sharedPref = applicationContext.getSharedPreferences("pointSysUtils", MODE_PRIVATE)
-        val loginTime = sharedPref.getLong("loginTime", 0)
+        val list = getStatsList(usageEvents)           // return a list of events
+        val list2 = appList()                          // return a list of installed apps
 
-
-        val endTime = System.currentTimeMillis()
-
-        var diff = endTime - loginTime
-
-        if (diff < 0) {
-            diff *= (-1)
-        }
-
-        val list = getStatsList(endTime - diff, endTime)    // return a list of events
-        val list2 = appList()        // return a list of installed apps
         val googlePackages = mutableListOf(
             "com.android.chrome",
             "com.google.android.youtube",
@@ -376,7 +382,7 @@ class MainActivity : ComponentActivity() {
         )
         for (name in googlePackages) {
             val ai: ApplicationInfo = try {
-                this.packageManager.getApplicationInfo(
+                applicationContext.packageManager.getApplicationInfo(
                     name,
                     PackageManager.GET_META_DATA
                 )
@@ -387,8 +393,6 @@ class MainActivity : ComponentActivity() {
         }
         val purifiedList: MutableList<AppStat> = mutableListOf()
         for (name in list2) {
-//            Log.d("tag", "package: ${app.name}, time: ${app.time} now111")
-//            Log.d("tag","package: ${app.packageName}")
             var n: Long = 0
             for (app in list) {
                 if (app.packageName == name.packageName) {
@@ -402,25 +406,22 @@ class MainActivity : ComponentActivity() {
                 purifiedList.remove(app)
             }
         }
-
-//        for(app in purifiedList){
-//            Log.d("tag",app.packageName)
-//        }
         return purifiedList
+    }
 
+    private fun getUsageEvents(startTime: Long, endTime: Long): Flow<UsageEvents> = flow {
+        val usm: UsageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
 
+        val usageEvents: UsageEvents = usm.queryEvents(startTime, endTime)
+        emit(usageEvents)
     }
 
     @Throws(PackageManager.NameNotFoundException::class)
-    fun getStatsList(startTime: Long, endTime: Long): MutableList<AppStat> {
-        val usm: UsageStatsManager =
-            (this.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager)
-//        val appList = ArrayList<App>()
+    fun getStatsList(usageEvents: UsageEvents): MutableList<AppStat> {
+
         val appList: MutableList<AppStat> = mutableListOf()
 
-//        val allEvents = ArrayList<UsageEvents.Event>()
         val allEvents: MutableList<UsageEvents.Event> = mutableListOf()
-        val usageEvents: UsageEvents = usm.queryEvents(startTime, endTime)
         var event: UsageEvents.Event
         var app: AppStat?
         while (usageEvents.hasNextEvent()) {
@@ -431,15 +432,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-//        Collections.sort(allEvents, sortEv())
         for (i in 1 until allEvents.size) {
             val event0 = allEvents[i]
             val event1 = allEvents[i - 1]
             if (event1.eventType == 1 && event0.eventType == 2 && event1.packageName == event0.packageName) {
-//                icon = packageManager.getApplicationIcon(E1.packageName)
                 val diff = event0.timeStamp - event1.timeStamp
                 app = AppStat(
-//                    icon,
                     event1.packageName,
                     diff
                 )
@@ -447,17 +445,13 @@ class MainActivity : ComponentActivity() {
 
             }
         }
-
         return appList
     }
 
     @SuppressLint("QueryPermissionsNeeded")
     fun appList(): MutableList<ApplicationInfo> {
-
         return packageManager.getInstalledApplications(PackageManager.GET_META_DATA).filterNot {
             (it.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-            //            packageManager.getLeanbackLaunchIntentForPackage(it.packageName) != null
-
         } as MutableList<ApplicationInfo>
     }
 
@@ -468,69 +462,6 @@ class MainActivity : ComponentActivity() {
             Process.myUid(), packageName
         )
         return mode == AppOpsManager.MODE_ALLOWED
-    }
-
-    private fun getPoints(): Long {
-        val sharedPref = applicationContext.getSharedPreferences("pointSysUtils", MODE_PRIVATE)
-        val loginTime = sharedPref.getLong("loginTime", 0)
-
-
-        val endTime = System.currentTimeMillis()
-
-        var diff = endTime - loginTime
-
-        if (diff < 0) {
-            diff *= (-1)
-        }
-
-        val list = getStatsList(endTime - diff, endTime)    // return a list of events
-        val list2 = appList()        // return a list of installed apps
-        val googlePackages = mutableListOf(
-            "com.android.chrome",
-            "com.google.android.youtube",
-            "com.google.android.gm",
-            "com.google.android.googlequicksearchbox",
-            "com.google.android.apps.photos",
-            "com.google.android.apps.maps",
-            "com.google.android.apps.tachyon",
-            "com.google.android.apps.youtube.music",
-            "com.google.android.apps.docs",
-            "com.google.android.apps.googleassistant",
-            "com.google.android.apps.nbu.files",
-            "com.google.android.apps.messaging",
-            "com.google.android.calendar",
-            "com.google.android.keep",
-        ) //google system packages
-        for (name in googlePackages) {
-            val ai: ApplicationInfo = try {
-                this.packageManager.getApplicationInfo(
-                    name,
-                    PackageManager.GET_META_DATA
-                )
-            } catch (e: Exception) {
-                continue
-            }
-            list2.add(ai)
-        }
-        val purifiedList: MutableList<AppStat> = mutableListOf()
-        for (name in list2) {
-//            Log.d("tag", "package: ${app.name}, time: ${app.time} now111")
-//            Log.d("tag","package: ${app.packageName}")
-            var n: Long = 0
-            for (app in list) {
-                if (app.packageName == name.packageName) {
-                    n += app.foregroundTime
-                }
-            }
-            purifiedList.add(AppStat(name.packageName, n))
-        }
-        for (app in purifiedList) {
-            if (app.foregroundTime.equals(0)) {
-                purifiedList.remove(app)
-            }
-        }
-        val totalTime = purifiedList.sumOf { it.foregroundTime }
-        return 1000 - totalTime / 60000
     }
 
 }

@@ -6,28 +6,25 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import com.mindyug.app.common.MindYugButtonState
+import com.mindyug.app.data.preferences.PointSysUtils
+import com.mindyug.app.data.preferences.UserLoginState
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.PointItem
 import com.mindyug.app.domain.repository.PointRepository
-import com.mindyug.app.background.PointCollectWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.xml.datatype.DatatypeConstants.HOURS
 
 @HiltViewModel
 class PointViewModel
 @Inject constructor(
     private val pointRepository: PointRepository,
-    private val workManager: WorkManager
-
+    private val userPreferences: UserLoginState,
+    private val pointSysUtils: PointSysUtils
 ) : ViewModel() {
 
     private val _pointList = mutableStateOf(
@@ -38,21 +35,38 @@ class PointViewModel
     private val _collectBtn = mutableStateOf(
         MindYugButtonState()
     )
-
     val collectBtn: State<MindYugButtonState> = _collectBtn
 
-    fun getPoints(uid: String, context: Context) {
+    private val _uid = mutableStateOf("")
+    val uid: State<String> = _uid
+
+
+    private val _temporaryPoints = mutableStateOf<Long>(0)
+    val temporaryPoints: State<Long> = _temporaryPoints
+
+    init {
+        loadPoints()
+        loadUid()
+        getButtonState()
+        loadTemporaryPoints()
+    }
+
+    private fun loadUid() {
+        viewModelScope.launch {
+            userPreferences.uid.collect {
+                _uid.value = it
+            }
+
+        }
+    }
+
+    private fun getPoints(uid: String) {
         pointRepository.getAllPointsFromUid(uid).onEach { result ->
             when (result) {
                 is Results.Loading -> {
                     _pointList.value = pointList.value.copy(
                         isLoading = true
                     )
-                    Toast.makeText(
-                        context,
-                        "Loading",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
                 is Results.Success -> {
                     _pointList.value = pointList.value.copy(
@@ -60,33 +74,35 @@ class PointViewModel
                         list = result.data?.reversed()!!,
                         points = result.data!!.sumOf { it.points }
                     )
-                    Toast.makeText(
-                        context,
-                        "Success",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
                 is Results.Error -> {
-                    Toast.makeText(
-                        context,
-                        "Error",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    // put a SnackBar
                 }
-
             }
-
         }.launchIn(viewModelScope)
-
     }
 
+    fun loadPoints() {
+        viewModelScope.launch {
+            userPreferences.uid.collect {
+                getPoints(it)
+            }
+        }
+    }
+
+    private fun loadTemporaryPoints() {
+        viewModelScope.launch {
+            pointSysUtils.temporaryPoints.collect {
+                _temporaryPoints.value = it
+            }
+        }
+    }
 
     fun addPoint(
         pointItem: PointItem,
-        uid: String,
         context: Context,
     ) {
-        pointRepository.savePointItem(pointItem, uid).onEach { result ->
+        pointRepository.savePointItem(pointItem, _uid.value).onEach { result ->
             when (result) {
                 is Results.Loading -> {
                     Toast.makeText(
@@ -114,24 +130,30 @@ class PointViewModel
         }.launchIn(viewModelScope)
     }
 
-    fun pointsReset() {
-        val uploadWorkRequest: WorkRequest =
-            OneTimeWorkRequestBuilder<PointCollectWorker>()
-                .setInitialDelay(
-                    24,
-                    TimeUnit.HOURS
-                )
-                .addTag("PointResetWork")
-                .build()
 
-        workManager.cancelAllWorkByTag("PointResetWork")
 
-        workManager.enqueue(uploadWorkRequest)
+    private fun getButtonState() {
+        viewModelScope.launch {
+            pointSysUtils.collectButtonState.collect {
+                _collectBtn.value.isEnabled = it
+            }
+        }
     }
 
-    fun setBtnState(state: Boolean) {
-        _collectBtn.value = collectBtn.value.copy(isEnabled = state)
+
+
+    fun toggleButtonState() {
+        viewModelScope.launch {
+            pointSysUtils.toggleButtonState()
+        }
     }
+
+    fun clear(){
+        viewModelScope.launch {
+            pointSysUtils.clearPoints()
+        }
+    }
+
 
 
 

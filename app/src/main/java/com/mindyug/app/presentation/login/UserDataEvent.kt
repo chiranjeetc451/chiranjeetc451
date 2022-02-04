@@ -4,6 +4,4 @@ sealed class UserDataEvent {
     data class EnteredPhoneNumber(val value: String) : UserDataEvent()
     data class EnteredOTP(val value: String) : UserDataEvent()
     data class EnteredName(val value: String) : UserDataEvent()
-    data class EnteredUsername(val value: String) : UserDataEvent()
-    data class EnteredProfilePhoto(val value: String) : UserDataEvent()
 }

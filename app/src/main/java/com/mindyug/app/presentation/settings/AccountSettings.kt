@@ -59,33 +59,21 @@ fun AccountSettings(
                     }
                     Spacer(modifier = Modifier.width(98.dp))
                     Text(
-//                        modifier = Modifier.fillMaxWidth(),
                         text = "Account Settings",
                         color = Color.White,
-//                        textAlign = TextAlign.Center
                     )
                 }
             },
             backgroundColor = Color(0xFF0D3F56)
         ) {
-            val context = LocalContext.current
-            val sharedPref =
-                context.getSharedPreferences("userLoginState", Context.MODE_PRIVATE)
-            val uid = sharedPref.getString("uid", null)
+
             val loadingState = viewModel.accountSettingsState.value
             val phoneNumber = viewModel.phoneNumber.value
-            val userName = sharedPref.getString("name", null)
 
             val name = viewModel.name.value
             val save = viewModel.btnSave
 
             val address = viewModel.addressState.value
-
-
-            LaunchedEffect(Unit) {
-                viewModel.getUser(uid!!)
-            }
-
 
             if (loadingState.isLoading) {
                 Column(
@@ -106,16 +94,9 @@ fun AccountSettings(
                     horizontalAlignment = Alignment.Start
                 ) {
 
-
-                    LaunchedEffect(Unit) {
-                        viewModel.getProfilePictureUri(uid!!)
-                    }
-
                     val emptyImage =
                         Uri.parse("android.resource://com.mindyug.app/${R.drawable.ic_profile_pic}")
 
-
-                    var text by remember { mutableStateOf("") }
                     val imageUri = viewModel.profilePictureUri.value.uri
 
 
@@ -127,7 +108,7 @@ fun AccountSettings(
                             viewModel.changeToNewProfilePic(uri)
                         } else {
                             viewModel.changeToNewProfilePic(emptyImage)
-                            viewModel.getProfilePictureUri(uid!!)
+                            viewModel.loadProfilePictureUri()
                         }
                     }
 
@@ -185,7 +166,7 @@ fun AccountSettings(
                     Spacer(modifier = Modifier.height(8.dp))
                     TextField(
                         value = phoneNumber.text,
-                        onValueChange = { viewModel.editName(it, phoneNumber.text) },
+                        onValueChange = {  },
                         enabled = false,
                         placeholder = {
                             Text(
@@ -216,7 +197,7 @@ fun AccountSettings(
                     TextField(
                         value = name.text,
                         onValueChange = {
-                            viewModel.editName(it, userName!!)
+                            viewModel.editName(it)
                         },
                         placeholder = {
                             Text(
@@ -252,10 +233,10 @@ fun AccountSettings(
                     ) {
                         GradientButton(
                             onClick = {
-                                viewModel.uploadProfilePicFromUid(uid!!)
-                                sharedPref.edit().putString("name", name.text).apply()
+                                viewModel.uploadProfilePicFromUid()
+//                                sharedPref.edit().putString("name", name.text).apply()
+                                viewModel.saveName(name.text)
                                 viewModel.updateUserData(
-                                    uid!!,
                                     name.text!!,
                                     phoneNumber.text!!,
                                     address.houseNo!!,

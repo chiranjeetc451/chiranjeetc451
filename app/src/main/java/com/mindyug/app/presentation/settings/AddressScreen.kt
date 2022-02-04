@@ -56,19 +56,12 @@ fun AddressScreen(
             backgroundColor = Color(0xFF0D3F56)
         ) {
             val loadingState = viewModel.accountSettingsState.value
-            val context = LocalContext.current
-            val sharedPref =
-                context.getSharedPreferences("userLoginState", Context.MODE_PRIVATE)
-            val uid = sharedPref.getString("uid", null)
+
             val phoneNumber = viewModel.phoneNumber.value
-            val userName = sharedPref.getString("name", null)
+            val userName = viewModel.registeredName.value
 
             val save = viewModel.btnAddressSave
 
-
-            LaunchedEffect(Unit) {
-                viewModel.getUser(uid!!)
-            }
 
             val addressLineOne = viewModel.addressLineOne.value
             val addressLineTwo = viewModel.addressLineTwo.value
@@ -330,7 +323,6 @@ fun AddressScreen(
                         GradientButton(
                             onClick = {
                                 viewModel.updateUserData(
-                                    uid!!,
                                     userName!!,
                                     phoneNumber.text!!,
                                     houseNo.text!!,

@@ -1,24 +1,25 @@
 package com.mindyug.app.presentation.dashboard
 
+import android.icu.util.Calendar
 import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.accompanist.swiperefresh.SwipeRefreshState
-import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.R
 import com.mindyug.app.common.ProfilePictureState
 import com.mindyug.app.common.util.getPrimaryKeyDate
+import com.mindyug.app.common.util.monthFromDateInString
+import com.mindyug.app.data.preferences.UserLoginState
 import com.mindyug.app.data.repository.Results
-import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.domain.repository.StatDataRepository
 import com.mindyug.app.domain.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -31,9 +32,8 @@ class DashboardViewModel @Inject
 constructor(
     private val userDataRepository: UserDataRepository,
     private val statDataRepository: StatDataRepository,
-
-
-    ) : ViewModel() {
+    private val userPreferences: UserLoginState
+) : ViewModel() {
 
     //    private val _refreshState = mutableStateOf(true)
     private var _refreshState = mutableStateOf(SwipeRefreshState(false))
@@ -52,9 +52,19 @@ constructor(
 
     private var getAppStatsJob: Job? = null
 
+
+    val cal = Calendar.getInstance()
+
+
     init {
-        getProfilePictureUri(FirebaseAuth.getInstance().currentUser?.uid!!)
+        loadProfilePicture()
+        getStatData(
+            "${
+                cal.get(Calendar.DATE).toString()
+            } ${monthFromDateInString()}, ${cal.get(Calendar.YEAR).toString()}"
+        )
     }
+
 
     fun getProfilePictureUri(uid: String) {
         userDataRepository.getProfilePictureUri(uid).onEach { result ->
@@ -79,10 +89,10 @@ constructor(
         }.launchIn(viewModelScope)
     }
 
-    fun getStatData(date: Date) {
+    fun getStatData(date: String) {
         getAppStatsJob?.cancel()
         getAppStatsJob =
-            statDataRepository.getStatDataByDate(getPrimaryKeyDate(date)).onEach { it2 ->
+            statDataRepository.getStatDataByDate(date).onEach { it2 ->
                 it2.dailyUsedAppStatsList.sortByDescending { it.foregroundTime }
                 _appListGrid.value = appListGrid.value.copy(
                     isLoading = false,
@@ -102,6 +112,24 @@ constructor(
             delay(2000)
             _refreshState.value.isRefreshing = false
 
+        }
+    }
+
+    fun loadProfilePicture() {
+        viewModelScope.launch {
+            userPreferences.uid.collect {
+                getProfilePictureUri(it)
+            }
+        }
+    }
+
+    fun loadPermissionRequestState(): Flow<Boolean> {
+        return userPreferences.isPermissionRequested
+    }
+
+    fun togglePermissionState() {
+        viewModelScope.launch {
+            userPreferences.togglePermissionRequest()
         }
     }
 

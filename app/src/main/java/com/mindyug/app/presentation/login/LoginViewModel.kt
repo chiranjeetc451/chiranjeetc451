@@ -1,40 +1,42 @@
 package com.mindyug.app.presentation.login
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
+import android.content.Intent
+import android.icu.util.Calendar
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.common.MindYugButtonState
 import com.mindyug.app.common.util.validateName
 import com.mindyug.app.common.util.validateNumber
-import com.mindyug.app.common.util.validateUsername
+import com.mindyug.app.data.preferences.SharedPrefs
+import com.mindyug.app.data.preferences.UserLoginState
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.Address
 import com.mindyug.app.domain.model.UserData
 import com.mindyug.app.domain.repository.UserDataRepository
 import com.mindyug.app.presentation.util.Screen
-import com.mindyug.app.background.PointCollectWorker
+import com.mindyug.app.utils.PointsReceiver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject
 constructor(
     private val userDataRepository: UserDataRepository,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val userPreferences: UserLoginState,
+    private val sharedPrefs: SharedPrefs,
 ) : ViewModel() {
     private val _state = mutableStateOf(UserDataState())
     val state: State<UserDataState> = _state
@@ -56,19 +58,9 @@ constructor(
     )
     val name: State<MindYugTextFieldState> = _name
 
-    private val _username = mutableStateOf(
-        MindYugTextFieldState(
-            hint = "Username"
-        )
-    )
-    val username: State<MindYugTextFieldState> = _username
 
     private val _btnNext = mutableStateOf(MindYugButtonState())
     val btnNext: State<MindYugButtonState> = _btnNext
-
-    private val _btnVerify = mutableStateOf(MindYugButtonState())
-    val btnVerify: State<MindYugButtonState> = _btnVerify
-
 
     fun onEvent(event: UserDataEvent) {
         when (event) {
@@ -103,20 +95,8 @@ constructor(
 
                 }
             }
-            is UserDataEvent.EnteredUsername -> {
-                _username.value = username.value.copy(
-                    text = event.value,
-                    isError = false
-                )
-                if (!validateUsername(username.value.text)) {
-                    _username.value = username.value.copy(
-                        isError = true
-                    )
-                }
-            }
         }
     }
-
 
     fun uploadProfilePic(uri: Uri) {
         userDataRepository.uploadProfilePic(uri)
@@ -139,30 +119,11 @@ constructor(
                 }
                 is Results.Success -> {
                     navController.navigate(Screen.HomeScreen.route)
-                    val prefs = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
-                        ?: return@onEach
-                    with(prefs.edit()) {
-                        putBoolean("isUserLoggedIn", true)
-                        putString("uid", FirebaseAuth.getInstance().currentUser?.uid!!)
-                        putString("name", enteredName)
-                        apply()
-                    }
+                    sharedPrefs.toggleLogin()
+                    userPreferences.setUid(FirebaseAuth.getInstance().currentUser?.uid!!)
+                    userPreferences.editName(enteredName)
 
-                    val pointPrefs = context.getSharedPreferences("pointSysUtils", MODE_PRIVATE)
-                        ?: return@onEach
-                    with(pointPrefs.edit()) {
-                        putBoolean("collectButtonState", false)
-                        putLong("loginTime", System.currentTimeMillis())
-                        apply()
-                    }
-
-                    Toast.makeText(
-                        context,
-                        "Verification Successful",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    pointsReset()
-
+                    startPointsReset(context)
                 }
                 is Results.Error -> {
                     _btnNext.value = btnNext.value.copy(
@@ -180,56 +141,30 @@ constructor(
         userDataRepository.getUsernameFromUid().onEach { result ->
             when (result) {
                 is Results.Loading -> {
-                    Toast.makeText(
-                        context,
-                        "wait",
-                        Toast.LENGTH_SHORT
-                    ).show()
 
                 }
                 is Results.Success -> {
-//                    return@onEach result.data?.username != null
                     if (result.data?.name != null) {
                         navController.navigate(Screen.HomeScreen.route) {
                             popUpTo(Screen.HomeScreen.route)
                         }
 
-                        val prefs = context.getSharedPreferences("userLoginState", MODE_PRIVATE)
-                            ?: return@onEach
-                        with(prefs.edit()) {
-                            putBoolean("isUserLoggedIn", true)
-                            putString("uid", FirebaseAuth.getInstance().currentUser?.uid!!)
-                            putString("name", result.data.name)
-                            apply()
-                        }
-                        val pointPrefs = context.getSharedPreferences("pointSysUtils", MODE_PRIVATE)
-                            ?: return@onEach
-                        with(pointPrefs.edit()) {
-                            putBoolean("collectButtonState", false)
-                            putLong("loginTime", System.currentTimeMillis())
-                            apply()
-                        }
-                        pointsReset()
+                        sharedPrefs.toggleLogin()
+                        userPreferences.setUid(FirebaseAuth.getInstance().currentUser?.uid!!)
+                        userPreferences.editName(result.data.name)
 
+                        startPointsReset(context)
 
                     } else {
                         navController.navigate(Screen.EnterNameScreen.withArgs(phone))
                     }
 
                     result.data?.let { Log.d("tag", it.name) }
-                    Toast.makeText(
-                        context,
-                        "Verification ooop ${result.data?.name}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+
 
                 }
                 is Results.Error -> {
-                    Toast.makeText(
-                        context,
-                        "error",
-                        Toast.LENGTH_SHORT
-                    ).show()
+
                 }
 
             }
@@ -237,20 +172,23 @@ constructor(
         }.launchIn(viewModelScope)
     }
 
-    fun pointsReset() {
-        val uploadWorkRequest: WorkRequest =
-            OneTimeWorkRequestBuilder<PointCollectWorker>()
-                .setInitialDelay(
-                    24,
-                    TimeUnit.HOURS
-                )
-                .addTag("PointResetWork")
-                .build()
+    private fun startPointsReset(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        workManager.cancelAllWorkByTag("PointResetWork")
 
-        workManager.enqueue(uploadWorkRequest)
+        val cal = Calendar.getInstance()
+        cal[Calendar.HOUR_OF_DAY] = 23
+        cal[Calendar.MINUTE] = 59
+        cal[Calendar.SECOND] = 0
+
+        val intent = Intent(context, PointsReceiver::class.java)
+        val requestCode = 991
+        val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, 0)
+
+        alarmManager.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
     }
+
+
 }
 
 

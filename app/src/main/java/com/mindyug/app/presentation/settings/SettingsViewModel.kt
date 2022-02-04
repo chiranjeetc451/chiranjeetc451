@@ -5,6 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.mindyug.app.R
 import com.mindyug.app.common.ProfilePictureState
@@ -12,20 +13,29 @@ import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.repository.UserDataRepository
 import com.mindyug.app.presentation.login.MindYugTextFieldState
 import com.mindyug.app.common.util.validateName
+import com.mindyug.app.data.preferences.SharedPrefs
+import com.mindyug.app.data.preferences.UserLoginState
 import com.mindyug.app.domain.model.Address
 import com.mindyug.app.domain.model.UserData
 import com.mindyug.app.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Named
 
 @HiltViewModel
 class SettingsViewModel @Inject
 constructor(
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val userPreferences: UserLoginState,
+    private val sharedPrefs: SharedPrefs,
+
+
+
 ) : ViewModel() {
     private val _addressState = mutableStateOf(
         AddressState()
@@ -119,7 +129,50 @@ constructor(
     )
     val country: State<MindYugTextFieldState> = _country
 
+    private val _uid = mutableStateOf("")
+    val uid: State<String> = _uid
 
+    private val _registeredName = mutableStateOf("")
+    val registeredName: State<String> = _registeredName
+
+
+    init {
+        loadData()
+        loadUid()
+        loadName()
+    }
+
+    private fun loadName() {
+        viewModelScope.launch {
+            userPreferences.name.collect {
+                _registeredName.value = it
+            }
+
+        }
+    }
+
+
+    private fun loadUid() {
+        viewModelScope.launch {
+            userPreferences.uid.collect {
+                _uid.value = it
+            }
+
+        }
+    }
+
+    private fun loadData() {
+        viewModelScope.launch {
+            userPreferences.uid.collect {
+                getUser(it)
+                getProfilePictureUri(it)
+            }
+        }
+    }
+
+    fun loadProfilePictureUri() {
+        getProfilePictureUri(_uid.value)
+    }
 
 
     fun getProfilePictureUri(uid: String) {
@@ -156,8 +209,13 @@ constructor(
 
     }
 
-    fun uploadProfilePicFromUid(uid: String) {
-        profilePictureUri.value.uri?.let { userDataRepository.updateProfilePictureFromUid(it, uid) }
+    fun uploadProfilePicFromUid() {
+        profilePictureUri.value.uri?.let {
+            userDataRepository.updateProfilePictureFromUid(
+                it,
+                _uid.value
+            )
+        }
     }
 
     fun getUser(uid: String) {
@@ -245,7 +303,7 @@ constructor(
         }.launchIn(viewModelScope)
     }
 
-    fun editName(newName: String, oldName: String) {
+    fun editName(newName: String) {
         _name.value = name.value.copy(
             text = newName,
             isError = false
@@ -256,12 +314,18 @@ constructor(
                 isError = true
             )
         }
-        if (name.value.text != oldName) {
+        if (name.value.text != _registeredName.value) {
             _btnSave.value = btnSave.value.copy(
                 isEnabled = true
             )
         }
 
+    }
+
+    fun saveName(name:String){
+        viewModelScope.launch {
+            userPreferences.editName(name)
+        }
     }
 
     fun onEvent(event: AddressEvent) {
@@ -363,7 +427,6 @@ constructor(
     }
 
     fun updateUserData(
-        uid: String,
         enteredName: String,
         number: String,
         houseNo: String?,
@@ -390,8 +453,7 @@ constructor(
                 country
             )
         )
-
-        userDataRepository.setUserDataFromUid(user, uid).onEach { result ->
+        userDataRepository.setUserDataFromUid(user, _uid.value).onEach { result ->
             when (result) {
                 is Results.Loading -> {
                     _btnAddressSave.value = btnAddressSave.value.copy(
@@ -414,8 +476,16 @@ constructor(
             }
 
         }.launchIn(viewModelScope)
+    }
 
-
+    fun logOut(){
+        sharedPrefs.toggleLogin()
+        clear()
+    }
+    fun clear(){
+        viewModelScope.launch {
+            userPreferences.clear()
+        }
     }
 
 

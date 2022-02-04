@@ -33,6 +33,7 @@ fun ProfileScreen(
     navHostController: NavHostController,
     viewModel: ProfileViewModel = hiltViewModel(),
 
+
     ) {
     MindYugTheme {
         Scaffold(
@@ -70,14 +71,6 @@ fun ProfileScreen(
             },
             backgroundColor = Color(0xFF0D3F56)
         ) {
-            val context = LocalContext.current
-            val sharedPref = context.getSharedPreferences("userLoginState", Context.MODE_PRIVATE)
-            val uid = sharedPref.getString("uid", null)
-            val name = sharedPref.getString("name", null)
-
-            LaunchedEffect(Unit) {
-                viewModel.getProfilePictureUri(uid!!)
-            }
 
             val imageUri = viewModel.profilePictureUri.value.uri
 
@@ -111,7 +104,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = name!!,
+                    text = viewModel.name.value,
                     color = Color.White,
                     style = MaterialTheme.typography.h5
                 )

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.presentation.settings.components.SettingsButton
@@ -24,8 +25,10 @@ import com.mindyug.app.ui.theme.MindYugTheme
 
 @Composable
 fun SettingsScreen(
-    navHostController: NavHostController
-) {
+    navHostController: NavHostController,
+    viewModel: SettingsViewModel = hiltViewModel(),
+
+    ) {
     MindYugTheme {
         Scaffold(
             topBar = {
@@ -145,11 +148,9 @@ fun SettingsScreen(
                 SettingsButton(
                     onClick = {
                         FirebaseAuth.getInstance().signOut()
-                        val sharedPref =
-                            context.getSharedPreferences("userLoginState", Context.MODE_PRIVATE)
-                        sharedPref.edit().clear().apply()
-                        navHostController.navigate(Screen.IntroductionScreen.route){
-                            popUpTo(Screen.SettingsScreen.route) { inclusive = true}
+                        viewModel.logOut()
+                        navHostController.navigate(Screen.IntroductionScreen.route) {
+                            popUpTo(Screen.SettingsScreen.route) { inclusive = true }
                         }
                     }
                 ) {
