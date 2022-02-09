@@ -35,6 +35,11 @@ fun MindYugStatCard(
 
     val icon: Drawable = context.packageManager.getApplicationIcon(ai)
 
+
+
+
+
+
     val painter = rememberImagePainter(
         data = icon, builder = {
             transformations(

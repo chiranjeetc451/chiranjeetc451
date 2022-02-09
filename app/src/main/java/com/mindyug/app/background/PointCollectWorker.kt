@@ -1,11 +1,14 @@
 package com.mindyug.app.background
 
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.icu.util.Calendar
@@ -22,8 +25,10 @@ import com.mindyug.app.data.preferences.PointSysUtils
 import com.mindyug.app.domain.model.AppStat
 import com.mindyug.app.domain.model.StatData
 import com.mindyug.app.domain.repository.StatDataRepository
+import com.mindyug.app.utils.PointsReceiver
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.onEach
 import java.util.concurrent.TimeUnit
 
@@ -39,40 +44,56 @@ class PointCollectWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         return try {
 
-            val cal = java.util.Calendar.getInstance()
-            cal[Calendar.HOUR_OF_DAY] = 0
-            cal[Calendar.MINUTE] = 0
-            cal[Calendar.SECOND] = 0
-            val startTime = cal.timeInMillis
+//
+//            val cal = java.util.Calendar.getInstance()
+//            cal[Calendar.HOUR_OF_DAY] = 0
+//            cal[Calendar.MINUTE] = 0
+//            cal[Calendar.SECOND] = 0
+//            val startTime = cal.timeInMillis
+//
+//            val endTime = System.currentTimeMillis()
+//
+//            val job: Job = Job()
+//            val coroutineScope = CoroutineScope(job + Dispatchers.IO)
+//
+//
+//
+//                pointSysUtils.addPoints(getPoints(applicationContext))
+//
+//
+//                statDataRepository.setStatData(
+//                    StatData(
+//                        getPurifiedList(startTime, endTime, applicationContext),
+//                        cal.get(Calendar.DATE).toString(),
+//                        cal.get(Calendar.MONTH).toString(),
+//                        cal.get(Calendar.YEAR).toString(),
+//                        "${cal.get(Calendar.DATE).toString()} ${monthFromDateInString()}, ${
+//                            cal.get(
+//                                Calendar.YEAR
+//                            ).toString()
+//                        }"
+//                    )
+//                )
+//
+//
+//
+//
+//
 
-            val endTime = System.currentTimeMillis()
-
-            pointSysUtils.toggleButtonState()
-
-            statDataRepository.setStatData(StatData(
-                getPurifiedList(startTime,endTime, applicationContext),
-                cal.get(Calendar.DATE).toString(),
-                cal.get(Calendar.MONTH).toString(),
-                cal.get(Calendar.YEAR).toString(),
-                "${cal.get(Calendar.DATE).toString()} ${monthFromDateInString()}, ${
-                    cal.get(
-                        Calendar.YEAR
-                    ).toString()
-                }"
-            ))
-
-            pointSysUtils.addPoints(getPoints(applicationContext))
-
-            makeStatusNotification("Collect points to win exciting prizes!", applicationContext)
 
 
-            val uploadWorkRequest: WorkRequest =
-                OneTimeWorkRequestBuilder<PointResetWorker>()
-                    .setInitialDelay(12, TimeUnit.HOURS)
-                    .addTag("PointResetWorker")
-                    .build()
 
-            workManager.enqueue(uploadWorkRequest)
+
+//            makeStatusNotification("Collect points to win exciting prizes!", applicationContext)
+//
+//
+//            val uploadWorkRequest: WorkRequest =
+//                OneTimeWorkRequestBuilder<PointResetWorker>()
+//                    .setInitialDelay(12, TimeUnit.HOURS)
+//                    .addTag("PointResetWorker")
+//                    .build()
+////
+//            workManager.enqueue(uploadWorkRequest)
 
 
 
@@ -140,7 +161,7 @@ private fun getPointsByStartAndEndTime(startTime: Long, endTime: Long, context: 
         "com.google.android.gm",
         "com.google.android.googlequicksearchbox",
         "com.google.android.apps.photos",
-        "com.google.android.apps.maps",
+//        "com.google.android.apps.maps",
         "com.google.android.apps.tachyon",
         "com.google.android.apps.youtube.music",
         "com.google.android.apps.docs",
@@ -148,7 +169,7 @@ private fun getPointsByStartAndEndTime(startTime: Long, endTime: Long, context: 
         "com.google.android.apps.nbu.files",
         "com.google.android.apps.messaging",
         "com.google.android.calendar",
-        "com.google.android.keep",
+//        "com.google.android.keep",
     ) //google system packages
     for (name in googlePackages) {
         val ai: ApplicationInfo = try {
@@ -183,7 +204,11 @@ private fun getPointsByStartAndEndTime(startTime: Long, endTime: Long, context: 
 }
 
 
-private fun getPurifiedList(startTime: Long, endTime: Long, context: Context): MutableList<AppStat> {
+fun getPurifiedList(
+    startTime: Long,
+    endTime: Long,
+    context: Context
+): MutableList<AppStat> {
 
     val list = getStatsList(startTime, endTime, context)           // return a list of events
     val list2 = appList(context)                          // return a list of installed apps

@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import androidx.work.WorkManager
 import com.google.firebase.auth.FirebaseAuth
 import com.mindyug.app.common.MindYugButtonState
 import com.mindyug.app.common.util.validateName
@@ -34,7 +33,6 @@ import javax.inject.Inject
 class LoginViewModel @Inject
 constructor(
     private val userDataRepository: UserDataRepository,
-    private val workManager: WorkManager,
     private val userPreferences: UserLoginState,
     private val sharedPrefs: SharedPrefs,
 ) : ViewModel() {
@@ -173,22 +171,31 @@ constructor(
     }
 
     private fun startPointsReset(context: Context) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val cal = Calendar.getInstance()
         cal[Calendar.HOUR_OF_DAY] = 23
         cal[Calendar.MINUTE] = 59
         cal[Calendar.SECOND] = 0
+        cal[Calendar.MILLISECOND] = 0
 
         val intent = Intent(context, PointsReceiver::class.java)
         val requestCode = 991
-        val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, 0)
+        val pendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
 
-        alarmManager.set(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC,
+            cal.timeInMillis,
+            pendingIntent
+        )
     }
-
-
 }
 
 

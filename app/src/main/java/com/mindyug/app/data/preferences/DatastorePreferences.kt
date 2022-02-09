@@ -108,7 +108,7 @@ class PointSysUtilsImpl(context: Context) : PrefsDataStore(context, PREF_POINT_S
 
 
     companion object {
-        private const val PREF_POINT_SYSTEM_UTILS = "point_system_utils"
+        const val PREF_POINT_SYSTEM_UTILS = "point_system_utils"
 
         private val BUTTON_STATE = booleanPreferencesKey("collect_button_state")
         private val TEMP_POINTS = longPreferencesKey("temporary_points")

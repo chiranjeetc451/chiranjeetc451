@@ -10,12 +10,14 @@ class SharedPrefs(context: Context) {
     private val prefs = context.getSharedPreferences(LOGIN_STATE, MODE_PRIVATE)
     private val isUserLoggedIn = prefs.getBoolean(IS_USER_LOGGED_IN, false)
 
-    fun toggleLogin(){
+    fun toggleLogin() {
         prefs.edit().putBoolean(IS_USER_LOGGED_IN, !isUserLoggedIn).apply()
     }
+
 
     companion object {
         const val LOGIN_STATE = "user_login_state"
         const val IS_USER_LOGGED_IN = "is_user_logged_in"
+        const val POINTS = "user_points"
     }
 }

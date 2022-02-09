@@ -48,7 +48,7 @@ constructor(
 
 
     private fun getTotalPoints() {
-        getAppStatsJob?.cancel()
+//        getAppStatsJob?.cancel()
 
         val cal = Calendar.getInstance()
 

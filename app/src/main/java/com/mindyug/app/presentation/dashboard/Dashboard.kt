@@ -55,6 +55,13 @@ import android.content.Intent
 
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.mindyug.app.common.components.GradientButton
 
@@ -96,53 +103,71 @@ fun Dashboard(
 
     val imageUri = viewModel.profilePictureUri.value.uri
 
+    var showMenu by remember { mutableStateOf(false) }
 
-    Scaffold {
 
-        SwipeRefresh(
-            state = viewModel.refreshState.value, onRefresh = {
-                viewModel.delayFun()
-                viewModel.getStatData(
-                    "${cal.get(Calendar.DATE).toString()} ${monthFromDateInString()}, ${
-                        cal.get(
-                            Calendar.YEAR
-                        ).toString()
-                    }"
-                )
-            }
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-            ) {
-                item {
-                    if (!pm!!.isIgnoringBatteryOptimizations(packageName)) {
-                        Snackbar(
-                            action = {
-                                GradientButton(onClick = {
-                                    val intent = Intent()
-                                    intent.action =
-                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                                    intent.data = Uri.parse("package:$packageName")
-                                    context.startActivity(intent)
-                                }) {
-                                    Text("Request Settings!")
-
-                                }
-                            },
-                            modifier = Modifier.padding(8.dp),
-                            backgroundColor = Color(0xFF032B3E)
-                        ) { Text(text = "Please allow MindYug to run in background!") }
-                    }
+    Surface(
+        color = Color.White, modifier = Modifier
+            .fillMaxSize()
+            .alpha(
+                if (showMenu) {
+                    0.2f
+                } else {
+                    1f
                 }
+            )
+    ) {
+        Scaffold {
 
-                item {
-                    TopBar(
-                        imageUri = imageUri,
-                        navController = navController,
-                        temporaryPoints = temporaryPoints
+            SwipeRefresh(
+                state = viewModel.refreshState.value, onRefresh = {
+                    viewModel.delayFun()
+                    viewModel.getStatData(
+                        "${cal.get(Calendar.DATE).toString()} ${monthFromDateInString()}, ${
+                            cal.get(
+                                Calendar.YEAR
+                            ).toString()
+                        }"
                     )
                 }
+            ) {
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                ) {
+                    item {
+                        if (!pm!!.isIgnoringBatteryOptimizations(packageName)) {
+                            Snackbar(
+                                action = {
+                                    GradientButton(onClick = {
+                                        val intent = Intent()
+                                        intent.action =
+                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                        intent.data = Uri.parse("package:$packageName")
+                                        context.startActivity(intent)
+                                    }) {
+                                        Text("Request Settings!")
+
+                                    }
+                                },
+                                modifier = Modifier.padding(8.dp),
+                                backgroundColor = Color(0xFF032B3E)
+                            ) { Text(text = "Please allow MindYug to run in background!") }
+                        }
+                    }
+
+                    item {
+                        TopBar(
+                            imageUri = imageUri,
+                            navController = navController,
+                            temporaryPoints = temporaryPoints,
+                            showMenu = showMenu,
+                            onMenuClicked = { showMenu = !showMenu },
+                            onMenuDismissed = { showMenu = false }
+                        )
+                    }
+
 
 //            item {
 //                val abc = mutableListOf<AppStat>(
@@ -153,69 +178,114 @@ fun Dashboard(
 //                    AppStat("com.whatsapp", 778),
 //                    AppStat("com.whatsapp", 778)
 //                )
-//
 //                Graph(totalTimeInMillis = 200000, list = abc, context = context)
 //            }
 
-                if (!listState.isLoading) {
-                    listState.list?.sortByDescending { it.foregroundTime }
+                    if (!listState.isLoading) {
+                        listState.list?.sortByDescending { it.foregroundTime }
 //                    list.sortByDescending { it.foregroundTime }
 
-                    listState.list?.distinctBy { it.packageName }
+                        listState.list?.distinctBy { it.packageName }
 //                    for (app in list) {
 //                        Log.d("tag", app.packageName)
 //                    }
-                    val ab = listState.list!!
-                    items(ab.windowed(2, 2, true)) { sublist ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-//                    .padding(8.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                        val ab = listState.list!!
+
+                        item {
                             Row(
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.Center
                             ) {
-                                sublist.forEach { item ->
-                                    MindYugStatCard(
-                                        context,
-                                        item
+                                Row(
+                                    modifier = Modifier
+                                        .shadow(8.dp)
+                                        .background(
+                                            color = Color(0xFF094561),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(10.dp)
+
+
+                                ) {
+                                    Text(
+                                        text = "Total Time: ",
+                                        style = TextStyle(
+                                            fontFamily = FontFamily.Default,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 20.sp
+                                        ),
                                     )
+                                    getDurationBreakdown(ab.sumOf { it.foregroundTime })?.let { it1 ->
+                                        Text(
+                                            text = it1,
+                                            style = TextStyle(
+                                                fontFamily = FontFamily.Default,
+                                                fontWeight = FontWeight.Normal,
+                                                fontSize = 20.sp
+                                            )
+                                        )
+                                    }
                                 }
+                            }
+                        }
+
+
+
+                        items(ab.windowed(2, 2, true)) { sublist ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+//                    .padding(8.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    sublist.forEach { item ->
+                                        MindYugStatCard(
+                                            context,
+                                            item
+                                        )
+                                    }
 
 
 //                AppStatGridList(list, context)
 
+                                }
                             }
                         }
-                    }
-                } else {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(30.dp),
-                                strokeWidth = 3.dp,
+                    } else {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(30.dp),
+                                    strokeWidth = 3.dp,
 
-                                color = Color.White
-                            )
+                                    color = Color.White
+                                )
+                            }
                         }
+
+
                     }
 
-
+                    item {
+                        Spacer(modifier = Modifier.height(80.dp))
+                    }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
+
             }
+
+
         }
-
-
     }
 
 
@@ -331,14 +401,17 @@ fun Graph(
 fun TopBar(
     imageUri: Uri?,
     navController: NavHostController,
-    temporaryPoints: Long
+    temporaryPoints: Long,
+    showMenu: Boolean,
+    onMenuClicked: () -> Unit,
+    onMenuDismissed: () -> Unit,
 
-) {
-    var showMenu by remember { mutableStateOf(false) }
+
+    ) {
     TopAppBar(
         title = {
             IconButton(
-                onClick = { showMenu = !showMenu }
+                onClick = onMenuClicked
             ) {
                 Icon(
                     imageVector = Icons.Filled.Menu,
@@ -347,7 +420,7 @@ fun TopBar(
             }
             DropdownMenu(
                 expanded = showMenu,
-                onDismissRequest = { showMenu = false },
+                onDismissRequest = onMenuDismissed,
                 modifier = Modifier.background(Color(0xFF0D3F56))
             ) {
                 Text(
@@ -359,67 +432,72 @@ fun TopBar(
                 )
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                        .width(260.dp)
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Button(
-                        modifier = Modifier.clip(RoundedCornerShape(percent = 50)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(percent = 50))
+                            .fillMaxWidth(),
                         onClick = { /*TODO*/ }
                     ) {
-                        Spacer(modifier = Modifier.width(23.dp))
                         Text(
                             text = "Refer a friend",
-                            style = MaterialTheme.typography.caption
+                            style = MaterialTheme.typography.body1,
+                            modifier = Modifier.padding(2.dp)
                         )
-                        Spacer(modifier = Modifier.width(23.dp))
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Button(
-                        modifier = Modifier.clip(RoundedCornerShape(percent = 50)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(percent = 50))
+                            .fillMaxWidth(),
                         onClick = { /*TODO*/ }
                     ) {
-                        Spacer(modifier = Modifier.width(24.dp))
                         Text(
                             text = "Leaderboard",
-                            style = MaterialTheme.typography.caption
+                            style = MaterialTheme.typography.body1,
+                            modifier = Modifier.padding(2.dp)
+
                         )
-                        Spacer(modifier = Modifier.width(24.dp))
 
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Button(
-                        modifier = Modifier.clip(RoundedCornerShape(percent = 50)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(percent = 50))
+                            .fillMaxWidth(),
                         onClick = { /*TODO*/ }
                     ) {
-                        Spacer(modifier = Modifier.width(30.dp))
-                        Text(
-                            text = "Go Pro",
-                            style = MaterialTheme.typography.caption
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Image(
-                            modifier = Modifier.size(20.dp),
-                            painter = painterResource(id = R.drawable.crown),
-                            contentDescription = "crown"
-                        )
-                        Spacer(modifier = Modifier.width(30.dp))
+                        Row(modifier = Modifier.padding(2.dp)) {
+                            Text(
+                                text = "Go Pro",
+                                style = MaterialTheme.typography.body1,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Image(
+                                modifier = Modifier.size(20.dp),
+                                painter = painterResource(id = R.drawable.crown),
+                                contentDescription = "crown"
+                            )
+                        }
 
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Button(
-                        modifier = Modifier.clip(RoundedCornerShape(percent = 50)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(percent = 50))
+                            .fillMaxWidth(),
                         onClick = { /*TODO*/ }
                     ) {
-                        Spacer(modifier = Modifier.width(24.dp))
                         Text(
                             text = "Live Support",
-                            style = MaterialTheme.typography.caption
+                            style = MaterialTheme.typography.body1,
+                            modifier = Modifier.padding(2.dp)
                         )
-                        Spacer(modifier = Modifier.width(24.dp))
-
                     }
 
                 }

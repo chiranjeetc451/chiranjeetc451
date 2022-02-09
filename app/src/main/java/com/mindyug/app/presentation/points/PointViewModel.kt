@@ -2,29 +2,36 @@ package com.mindyug.app.presentation.points
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
+import com.mindyug.app.background.PointResetWorker
 import com.mindyug.app.common.MindYugButtonState
 import com.mindyug.app.data.preferences.PointSysUtils
+import com.mindyug.app.data.preferences.SharedPrefs
 import com.mindyug.app.data.preferences.UserLoginState
 import com.mindyug.app.data.repository.Results
 import com.mindyug.app.domain.model.PointItem
 import com.mindyug.app.domain.repository.PointRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+
+
 
 @HiltViewModel
 class PointViewModel
 @Inject constructor(
     private val pointRepository: PointRepository,
     private val userPreferences: UserLoginState,
-    private val pointSysUtils: PointSysUtils
+    private val pointSysUtils: PointSysUtils,
 ) : ViewModel() {
 
     private val _pointList = mutableStateOf(
@@ -105,18 +112,10 @@ class PointViewModel
         pointRepository.savePointItem(pointItem, _uid.value).onEach { result ->
             when (result) {
                 is Results.Loading -> {
-                    Toast.makeText(
-                        context,
-                        "Loading",
-                        Toast.LENGTH_SHORT
-                    ).show()
+
                 }
                 is Results.Success -> {
-                    Toast.makeText(
-                        context,
-                        "Success",
-                        Toast.LENGTH_SHORT
-                    ).show()
+
                 }
                 is Results.Error -> {
                     Toast.makeText(
@@ -153,7 +152,6 @@ class PointViewModel
             pointSysUtils.clearPoints()
         }
     }
-
 
 
 

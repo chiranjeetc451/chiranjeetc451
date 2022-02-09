@@ -84,6 +84,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
 
+
+        setContent {
+            Navigation()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+
         val cal = java.util.Calendar.getInstance()
         cal[Calendar.HOUR_OF_DAY] = 0
         cal[Calendar.MINUTE] = 0
@@ -106,10 +116,6 @@ class MainActivity : ComponentActivity() {
                     }"
                 )
             }
-        }
-
-        setContent {
-            Navigation()
         }
     }
 
@@ -363,11 +369,29 @@ class MainActivity : ComponentActivity() {
         val list = getStatsList(usageEvents)           // return a list of events
         val list2 = appList()                          // return a list of installed apps
 
+//        val googlePackages = mutableListOf(
+//            "com.android.chrome",
+//            "com.google.android.youtube",
+//            "com.google.android.gm",
+//            "com.google.android.apps.maps",
+//            "com.google.android.googlequicksearchbox",
+//            "com.google.android.apps.photos",
+//            "com.google.android.apps.maps",
+//            "com.google.android.apps.tachyon",
+//            "com.google.android.apps.youtube.music",
+//            "com.google.android.apps.docs",
+//            "com.google.android.apps.googleassistant",
+//            "com.google.android.apps.nbu.files",
+//            "com.google.android.apps.messaging",
+//            "com.google.android.calendar",
+//            "com.google.android.keep",
+//        )
+
         val googlePackages = mutableListOf(
             "com.android.chrome",
             "com.google.android.youtube",
             "com.google.android.gm",
-            "com.google.android.apps.maps",
+//            "com.google.android.apps.maps",
             "com.google.android.googlequicksearchbox",
             "com.google.android.apps.photos",
             "com.google.android.apps.maps",
@@ -378,7 +402,7 @@ class MainActivity : ComponentActivity() {
             "com.google.android.apps.nbu.files",
             "com.google.android.apps.messaging",
             "com.google.android.calendar",
-            "com.google.android.keep",
+//            "com.google.android.keep",
         )
         for (name in googlePackages) {
             val ai: ApplicationInfo = try {
